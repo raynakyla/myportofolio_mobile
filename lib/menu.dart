@@ -2,6 +2,8 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
+const _compactWidth = 600.0;
+
 class _PortfolioColors {
   static const cream = Color(0xFFFFF9F3);
   static const pink = Color(0xFFF6CEDD);
@@ -28,6 +30,8 @@ class MyHomePage extends StatelessWidget {
 
   final String title;
 
+  static const _maxContentWidth = 984.0;
+
   static const items = [
     ItemHomepage(
       'Lihat Proyek',
@@ -51,20 +55,21 @@ class MyHomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.sizeOf(context).width;
+    final isNarrow = MediaQuery.sizeOf(context).width < _compactWidth;
+    final horizontalPadding = isNarrow ? 16.0 : 28.0;
 
     return Scaffold(
       appBar: AppBar(
-        toolbarHeight: 88,
-        titleSpacing: screenWidth < 600 ? 16 : 28,
+        toolbarHeight: isNarrow ? 72 : 88,
+        titleSpacing: horizontalPadding,
         backgroundColor: _PortfolioColors.cream,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         title: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1040),
+            constraints: const BoxConstraints(maxWidth: _maxContentWidth),
             child: Container(
-              height: 58,
+              height: isNarrow ? 48 : 58,
               padding: const EdgeInsets.symmetric(horizontal: 18),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
@@ -147,21 +152,23 @@ class MyHomePage extends StatelessWidget {
           ),
           SafeArea(
             child: SingleChildScrollView(
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1040),
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      screenWidth < 600 ? 16 : 28,
-                      24,
-                      screenWidth < 600 ? 16 : 28,
-                      52,
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  horizontalPadding,
+                  isNarrow ? 16 : 24,
+                  horizontalPadding,
+                  isNarrow ? 32 : 52,
+                ),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      maxWidth: _maxContentWidth,
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const _HeroCard(),
-                        const SizedBox(height: 42),
+                        SizedBox(height: isNarrow ? 22 : 42),
                         const Text(
                           'EXPLORE',
                           style: TextStyle(
@@ -171,19 +178,19 @@ class MyHomePage extends StatelessWidget {
                             letterSpacing: 2.2,
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        const Text(
+                        SizedBox(height: isNarrow ? 4 : 8),
+                        Text(
                           'Where to next?',
                           style: TextStyle(
                             fontFamily: 'Playfair Display',
                             color: _PortfolioColors.ink,
-                            fontSize: 30,
+                            fontSize: isNarrow ? 26 : 30,
                             fontWeight: FontWeight.w600,
                             letterSpacing: -0.3,
                             height: 1.2,
                           ),
                         ),
-                        const SizedBox(height: 20),
+                        SizedBox(height: isNarrow ? 12 : 20),
                         LayoutBuilder(
                           builder: (context, constraints) {
                             final width = constraints.maxWidth;
@@ -192,20 +199,29 @@ class MyHomePage extends StatelessWidget {
                                 : width >= 570
                                 ? 2
                                 : 1;
+                            final gap = isNarrow ? 10.0 : 14.0;
                             final tileWidth =
-                                (width - (columns - 1) * 14) / columns;
-                            final tileHeight = columns == 3 ? 142.0 : 108.0;
+                                (width - (columns - 1) * gap) / columns;
+                            final minHeight = isNarrow
+                                ? 76.0
+                                : columns == 3
+                                ? 142.0
+                                : 108.0;
 
-                            return GridView.count(
-                              crossAxisCount: columns,
-                              crossAxisSpacing: 14,
-                              mainAxisSpacing: 14,
-                              childAspectRatio: tileWidth / tileHeight,
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              children: items
-                                  .map((item) => ItemCard(item: item))
-                                  .toList(),
+                            return Wrap(
+                              spacing: gap,
+                              runSpacing: gap,
+                              children: [
+                                for (final item in items)
+                                  ConstrainedBox(
+                                    constraints: BoxConstraints(
+                                      minWidth: tileWidth,
+                                      maxWidth: tileWidth,
+                                      minHeight: minHeight,
+                                    ),
+                                    child: ItemCard(item: item),
+                                  ),
+                              ],
                             );
                           },
                         ),
@@ -255,7 +271,7 @@ class _HeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isNarrow = MediaQuery.sizeOf(context).width < 600;
+    final isNarrow = MediaQuery.sizeOf(context).width < _compactWidth;
     final radius = BorderRadius.circular(isNarrow ? 25 : 32);
 
     return Container(
@@ -275,7 +291,7 @@ class _HeroCard extends StatelessWidget {
           filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
           child: Container(
             width: double.infinity,
-            padding: EdgeInsets.all(isNarrow ? 24 : 48),
+            padding: EdgeInsets.all(isNarrow ? 16 : 48),
             decoration: BoxDecoration(
               border: Border.all(color: Colors.white.withValues(alpha: 0.82)),
               borderRadius: radius,
@@ -288,53 +304,53 @@ class _HeroCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'COMPUTER SCIENCE · UNIVERSITAS INDONESIA',
                   style: TextStyle(
                     color: Color(0xFF655D61),
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
-                    letterSpacing: 1.7,
-                    height: 1.5,
+                    letterSpacing: isNarrow ? 1.2 : 1.7,
+                    height: isNarrow ? 1.3 : 1.5,
                   ),
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: isNarrow ? 8 : 20),
                 Text(
                   'Hi, I’m Vanka.',
                   style: TextStyle(
                     fontFamily: 'Playfair Display',
                     color: _PortfolioColors.ink,
-                    fontSize: isNarrow ? 42 : 66,
+                    fontSize: isNarrow ? 34 : 66,
                     fontWeight: FontWeight.w700,
                     letterSpacing: isNarrow ? -0.6 : -1.2,
                     height: 1.12,
                   ),
                 ),
-                const SizedBox(height: 18),
-                const Text(
+                SizedBox(height: isNarrow ? 6 : 18),
+                Text(
                   'Rayna Kayla Rayvanka',
                   style: TextStyle(
                     color: _PortfolioColors.ink,
-                    fontSize: 18,
+                    fontSize: isNarrow ? 16 : 18,
                     fontWeight: FontWeight.w600,
                     letterSpacing: -0.3,
                   ),
                 ),
-                const SizedBox(height: 14),
+                SizedBox(height: isNarrow ? 8 : 14),
                 ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 620),
-                  child: const Text(
+                  child: Text(
                     'Computer Science student at Universitas Indonesia who somehow keeps ending up in tech projects, events, and creative spaces — usually all at the same time.',
                     style: TextStyle(
                       color: _PortfolioColors.muted,
-                      fontSize: 15,
-                      height: 1.55,
+                      fontSize: isNarrow ? 14 : 15,
+                      height: isNarrow ? 1.45 : 1.55,
                     ),
                   ),
                 ),
-                const SizedBox(height: 32),
+                SizedBox(height: isNarrow ? 14 : 32),
                 Container(height: 1, color: const Color(0x1C4D4046)),
-                const SizedBox(height: 22),
+                SizedBox(height: isNarrow ? 10 : 22),
                 const Text(
                   'AT A GLANCE',
                   style: TextStyle(
@@ -344,15 +360,40 @@ class _HeroCard extends StatelessWidget {
                     letterSpacing: 1.8,
                   ),
                 ),
-                const SizedBox(height: 14),
+                SizedBox(height: isNarrow ? 8 : 14),
                 LayoutBuilder(
                   builder: (context, constraints) {
                     final width = constraints.maxWidth;
-                    const cards = [
-                      InfoCard(label: 'NPM', value: '2506657283'),
-                      InfoCard(label: 'Nama', value: 'Rayna Kayla Rayvanka'),
-                      InfoCard(label: 'Kelas', value: 'PBP F'),
-                    ];
+                    const npm = InfoCard(label: 'NPM', value: '2506657283');
+                    const name = InfoCard(
+                      label: 'Nama',
+                      value: 'Rayna Kayla Rayvanka',
+                    );
+                    const studentClass = InfoCard(
+                      label: 'Kelas',
+                      value: 'PBP F',
+                    );
+                    const cards = [npm, name, studentClass];
+
+                    if (isNarrow) {
+                      const gap = 8.0;
+                      final halfWidth = (width - gap) / 2;
+                      final textScale =
+                          MediaQuery.textScalerOf(context).scale(15) / 15;
+                      final shortCardWidth = halfWidth >= 120 * textScale
+                          ? halfWidth
+                          : width;
+
+                      return Wrap(
+                        spacing: gap,
+                        runSpacing: gap,
+                        children: [
+                          name,
+                          SizedBox(width: shortCardWidth, child: npm),
+                          SizedBox(width: shortCardWidth, child: studentClass),
+                        ],
+                      );
+                    }
 
                     if (width >= 720) {
                       return Row(
@@ -405,9 +446,14 @@ class InfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isNarrow = MediaQuery.sizeOf(context).width < _compactWidth;
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 15),
+      padding: EdgeInsets.symmetric(
+        horizontal: isNarrow ? 12 : 17,
+        vertical: isNarrow ? 8 : 15,
+      ),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Colors.white.withValues(alpha: 0.78)),
@@ -436,7 +482,7 @@ class InfoCard extends StatelessWidget {
               letterSpacing: 1.3,
             ),
           ),
-          const SizedBox(height: 7),
+          SizedBox(height: isNarrow ? 3 : 7),
           Text(
             value,
             style: const TextStyle(
@@ -459,6 +505,8 @@ class ItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isNarrow = MediaQuery.sizeOf(context).width < _compactWidth;
+
     return Material(
       color: Colors.transparent,
       elevation: 3,
@@ -493,7 +541,10 @@ class ItemCard extends StatelessWidget {
             );
           },
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+            padding: EdgeInsets.symmetric(
+              horizontal: 18,
+              vertical: isNarrow ? 12 : 18,
+            ),
             child: Row(
               children: [
                 Container(
@@ -516,8 +567,6 @@ class ItemCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     item.name,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       color: _PortfolioColors.ink,
                       fontSize: 15,
