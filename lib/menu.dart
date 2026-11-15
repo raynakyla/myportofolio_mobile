@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 
 const _compactWidth = 600.0;
@@ -9,20 +7,18 @@ class _PortfolioColors {
   static const pink = Color(0xFFF6CEDD);
   static const yellow = Color(0xFFFBE8A6);
   static const lavender = Color(0xFFDDD8F6);
-  static const peach = Color(0xFFF7D4BF);
-  static const blue = Color(0xFFDCEAF7);
   static const ink = Color(0xFF2F2A2D);
   static const muted = Color(0xFF746C70);
   static const mauve = Color(0xFF9D5F78);
 }
 
 class ItemHomepage {
-  const ItemHomepage(this.name, this.icon, this.startColor, this.endColor);
+  const ItemHomepage(this.name, this.icon, this.accent, this.accentInk);
 
   final String name;
   final IconData icon;
-  final Color startColor;
-  final Color endColor;
+  final Color accent;
+  final Color accentInk;
 }
 
 class MyHomePage extends StatelessWidget {
@@ -36,20 +32,20 @@ class MyHomePage extends StatelessWidget {
     ItemHomepage(
       'Lihat Proyek',
       Icons.folder_rounded,
-      _PortfolioColors.pink,
-      _PortfolioColors.lavender,
+      Color(0xFFF3D9EA),
+      Color(0xFF884366),
     ),
     ItemHomepage(
       'Tambah Proyek',
       Icons.add_circle_rounded,
       _PortfolioColors.yellow,
-      _PortfolioColors.peach,
+      Color(0xFF765621),
     ),
     ItemHomepage(
       'Logout',
       Icons.logout_rounded,
-      _PortfolioColors.blue,
       _PortfolioColors.lavender,
+      Color(0xFF605185),
     ),
   ];
 
@@ -274,164 +270,162 @@ class _HeroCard extends StatelessWidget {
     final isNarrow = MediaQuery.sizeOf(context).width < _compactWidth;
     final radius = BorderRadius.circular(isNarrow ? 25 : 32);
 
-    return Container(
+    return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: radius,
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xE0FFFDFE), Color(0xCCFFF0F7), Color(0xA6F5D1E5)],
+          stops: [0, 0.5, 1],
+        ),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x2489536C),
-            blurRadius: 60,
-            offset: Offset(0, 22),
+            color: Color(0x1C89536C),
+            blurRadius: 42,
+            offset: Offset(0, 16),
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: radius,
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-          child: Container(
-            width: double.infinity,
-            padding: EdgeInsets.all(isNarrow ? 16 : 48),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.white.withValues(alpha: 0.82)),
-              borderRadius: radius,
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xE6FFFDFE), Color(0xB8FFF0F7)],
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.all(isNarrow ? 16 : 48),
+        decoration: BoxDecoration(
+          border: Border.all(color: const Color(0xF2FFFFFF)),
+          borderRadius: radius,
+          gradient: const RadialGradient(
+            center: Alignment(0.78, -0.9),
+            radius: 1.05,
+            colors: [Color(0xF5FFFFFF), Color(0x70FFF9FD), Color(0x00FFF9FD)],
+            stops: [0, 0.40, 1],
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'COMPUTER SCIENCE · UNIVERSITAS INDONESIA',
+              style: TextStyle(
+                color: Color(0xFF655D61),
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                letterSpacing: isNarrow ? 1.2 : 1.7,
+                height: isNarrow ? 1.3 : 1.5,
               ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'COMPUTER SCIENCE · UNIVERSITAS INDONESIA',
-                  style: TextStyle(
-                    color: Color(0xFF655D61),
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: isNarrow ? 1.2 : 1.7,
-                    height: isNarrow ? 1.3 : 1.5,
-                  ),
-                ),
-                SizedBox(height: isNarrow ? 8 : 20),
-                Text(
-                  'Hi, I’m Vanka.',
-                  style: TextStyle(
-                    fontFamily: 'Playfair Display',
-                    color: _PortfolioColors.ink,
-                    fontSize: isNarrow ? 34 : 66,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: isNarrow ? -0.6 : -1.2,
-                    height: 1.12,
-                  ),
-                ),
-                SizedBox(height: isNarrow ? 6 : 18),
-                Text(
-                  'Rayna Kayla Rayvanka',
-                  style: TextStyle(
-                    color: _PortfolioColors.ink,
-                    fontSize: isNarrow ? 16 : 18,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: -0.3,
-                  ),
-                ),
-                SizedBox(height: isNarrow ? 8 : 14),
-                ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 620),
-                  child: Text(
-                    'Computer Science student at Universitas Indonesia who somehow keeps ending up in tech projects, events, and creative spaces — usually all at the same time.',
-                    style: TextStyle(
-                      color: _PortfolioColors.muted,
-                      fontSize: isNarrow ? 14 : 15,
-                      height: isNarrow ? 1.45 : 1.55,
-                    ),
-                  ),
-                ),
-                SizedBox(height: isNarrow ? 14 : 32),
-                Container(height: 1, color: const Color(0x1C4D4046)),
-                SizedBox(height: isNarrow ? 10 : 22),
-                const Text(
-                  'AT A GLANCE',
-                  style: TextStyle(
-                    color: _PortfolioColors.muted,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.8,
-                  ),
-                ),
-                SizedBox(height: isNarrow ? 8 : 14),
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    final width = constraints.maxWidth;
-                    const npm = InfoCard(label: 'NPM', value: '2506657283');
-                    const name = InfoCard(
-                      label: 'Nama',
-                      value: 'Rayna Kayla Rayvanka',
-                    );
-                    const studentClass = InfoCard(
-                      label: 'Kelas',
-                      value: 'PBP F',
-                    );
-                    const cards = [npm, name, studentClass];
-
-                    if (isNarrow) {
-                      const gap = 8.0;
-                      final halfWidth = (width - gap) / 2;
-                      final textScale =
-                          MediaQuery.textScalerOf(context).scale(15) / 15;
-                      final shortCardWidth = halfWidth >= 120 * textScale
-                          ? halfWidth
-                          : width;
-
-                      return Wrap(
-                        spacing: gap,
-                        runSpacing: gap,
-                        children: [
-                          name,
-                          SizedBox(width: shortCardWidth, child: npm),
-                          SizedBox(width: shortCardWidth, child: studentClass),
-                        ],
-                      );
-                    }
-
-                    if (width >= 720) {
-                      return Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          for (var i = 0; i < cards.length; i++) ...[
-                            if (i > 0) const SizedBox(width: 12),
-                            Expanded(child: cards[i]),
-                          ],
-                        ],
-                      );
-                    }
-
-                    if (width >= 500) {
-                      final cardWidth = (width - 12) / 2;
-                      return Wrap(
-                        spacing: 12,
-                        runSpacing: 12,
-                        children: [
-                          for (final card in cards)
-                            SizedBox(width: cardWidth, child: card),
-                        ],
-                      );
-                    }
-
-                    return Column(
-                      children: [
-                        for (var i = 0; i < cards.length; i++) ...[
-                          if (i > 0) const SizedBox(height: 12),
-                          cards[i],
-                        ],
-                      ],
-                    );
-                  },
-                ),
-              ],
+            SizedBox(height: isNarrow ? 8 : 20),
+            Text(
+              'Hi, I’m Vanka.',
+              style: TextStyle(
+                fontFamily: 'Playfair Display',
+                color: _PortfolioColors.ink,
+                fontSize: isNarrow ? 34 : 66,
+                fontWeight: FontWeight.w700,
+                letterSpacing: isNarrow ? -0.6 : -1.2,
+                height: 1.12,
+              ),
             ),
-          ),
+            SizedBox(height: isNarrow ? 6 : 18),
+            Text(
+              'Rayna Kayla Rayvanka',
+              style: TextStyle(
+                color: _PortfolioColors.ink,
+                fontSize: isNarrow ? 16 : 18,
+                fontWeight: FontWeight.w600,
+                letterSpacing: -0.3,
+              ),
+            ),
+            SizedBox(height: isNarrow ? 8 : 14),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 620),
+              child: Text(
+                'Computer Science student at Universitas Indonesia who somehow keeps ending up in tech projects, events, and creative spaces — usually all at the same time.',
+                style: TextStyle(
+                  color: _PortfolioColors.muted,
+                  fontSize: isNarrow ? 14 : 15,
+                  height: isNarrow ? 1.45 : 1.55,
+                ),
+              ),
+            ),
+            SizedBox(height: isNarrow ? 14 : 32),
+            Container(height: 1, color: const Color(0x1C4D4046)),
+            SizedBox(height: isNarrow ? 10 : 22),
+            const Text(
+              'AT A GLANCE',
+              style: TextStyle(
+                color: _PortfolioColors.muted,
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.8,
+              ),
+            ),
+            SizedBox(height: isNarrow ? 8 : 14),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final width = constraints.maxWidth;
+                const npm = InfoCard(label: 'NPM', value: '2506657283');
+                const name = InfoCard(
+                  label: 'Nama',
+                  value: 'Rayna Kayla Rayvanka',
+                );
+                const studentClass = InfoCard(label: 'Kelas', value: 'PBP F');
+                const cards = [npm, name, studentClass];
+
+                if (isNarrow) {
+                  const gap = 8.0;
+                  final halfWidth = (width - gap) / 2;
+                  final textScale =
+                      MediaQuery.textScalerOf(context).scale(15) / 15;
+                  final shortCardWidth = halfWidth >= 120 * textScale
+                      ? halfWidth
+                      : width;
+
+                  return Wrap(
+                    spacing: gap,
+                    runSpacing: gap,
+                    children: [
+                      name,
+                      SizedBox(width: shortCardWidth, child: npm),
+                      SizedBox(width: shortCardWidth, child: studentClass),
+                    ],
+                  );
+                }
+
+                if (width >= 720) {
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      for (var i = 0; i < cards.length; i++) ...[
+                        if (i > 0) const SizedBox(width: 12),
+                        Expanded(child: cards[i]),
+                      ],
+                    ],
+                  );
+                }
+
+                if (width >= 500) {
+                  final cardWidth = (width - 12) / 2;
+                  return Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    children: [
+                      for (final card in cards)
+                        SizedBox(width: cardWidth, child: card),
+                    ],
+                  );
+                }
+
+                return Column(
+                  children: [
+                    for (var i = 0; i < cards.length; i++) ...[
+                      if (i > 0) const SizedBox(height: 12),
+                      cards[i],
+                    ],
+                  ],
+                );
+              },
+            ),
+          ],
         ),
       ),
     );
@@ -455,20 +449,9 @@ class InfoCard extends StatelessWidget {
         vertical: isNarrow ? 8 : 15,
       ),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.78)),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xC7FFFFFF), Color(0x92FFF2F8)],
-        ),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x1F89536C),
-            blurRadius: 20,
-            offset: Offset(0, 8),
-          ),
-        ],
+        color: const Color(0x68FFFEFF),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0x2489506C)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -506,84 +489,95 @@ class ItemCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isNarrow = MediaQuery.sizeOf(context).width < _compactWidth;
+    final radius = BorderRadius.circular(20);
 
-    return Material(
-      color: Colors.transparent,
-      elevation: 3,
-      shadowColor: const Color(0x3389536C),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(color: Colors.white.withValues(alpha: 0.82)),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Ink(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Colors.white.withValues(alpha: 0.72),
-              item.startColor.withValues(alpha: 0.68),
-              item.endColor.withValues(alpha: 0.72),
-            ],
-          ),
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: radius,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color(0xF5FFFFFF),
+            item.accent.withValues(alpha: 0.70),
+          ],
         ),
-        child: InkWell(
-          onTap: () {
-            final messenger = ScaffoldMessenger.of(context);
-            messenger.removeCurrentSnackBar();
-            messenger.showSnackBar(
-              SnackBar(
-                behavior: SnackBarBehavior.floating,
-                backgroundColor: _PortfolioColors.ink,
-                content: Text('Kamu telah menekan tombol ${item.name}!'),
-              ),
-            );
-          },
-          child: Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: 18,
-              vertical: isNarrow ? 12 : 18,
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.56),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.76),
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    item.icon,
-                    color: _PortfolioColors.mauve,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    item.name,
-                    style: const TextStyle(
-                      color: _PortfolioColors.ink,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      height: 1.25,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 6),
-                const Icon(
-                  Icons.arrow_forward_rounded,
-                  color: _PortfolioColors.mauve,
-                  size: 18,
-                ),
-              ],
-            ),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x1689536C),
+            blurRadius: 10,
+            offset: Offset(0, 4),
           ),
+        ],
+      ),
+      child: OutlinedButton(
+        style: ButtonStyle(
+          backgroundColor: const WidgetStatePropertyAll(Colors.transparent),
+          padding: WidgetStatePropertyAll(
+            EdgeInsets.symmetric(horizontal: 18, vertical: isNarrow ? 12 : 18),
+          ),
+          shape: WidgetStatePropertyAll(
+            RoundedRectangleBorder(borderRadius: radius),
+          ),
+          animationDuration: Duration.zero,
+          splashFactory: NoSplash.splashFactory,
+          side: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.focused)) {
+              return BorderSide(color: item.accentInk, width: 2);
+            }
+            final isHovered = states.contains(WidgetState.hovered);
+            return BorderSide(
+              color: item.accentInk.withValues(alpha: isHovered ? 0.45 : 0.20),
+            );
+          }),
+          overlayColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.pressed)) {
+              return item.accentInk.withValues(alpha: 0.16);
+            }
+            if (states.contains(WidgetState.hovered)) {
+              return item.accentInk.withValues(alpha: 0.07);
+            }
+            return Colors.transparent;
+          }),
+        ),
+        onPressed: () {
+          final messenger = ScaffoldMessenger.of(context);
+          messenger.removeCurrentSnackBar();
+          messenger.showSnackBar(
+            SnackBar(
+              behavior: SnackBarBehavior.floating,
+              backgroundColor: _PortfolioColors.ink,
+              content: Text('Kamu telah menekan tombol ${item.name}!'),
+            ),
+          );
+        },
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: item.accent.withValues(alpha: 0.70),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.88)),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(item.icon, color: item.accentInk, size: 24),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                item.name,
+                style: const TextStyle(
+                  color: _PortfolioColors.ink,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  height: 1.25,
+                ),
+              ),
+            ),
+            const SizedBox(width: 6),
+            Icon(Icons.arrow_forward_rounded, color: item.accentInk, size: 18),
+          ],
         ),
       ),
     );
