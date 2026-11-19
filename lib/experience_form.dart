@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:myportofolio_mobile/experience_data.dart';
 import 'package:myportofolio_mobile/portfolio_drawer.dart';
 import 'package:myportofolio_mobile/portfolio_style.dart';
 
@@ -10,6 +11,185 @@ class ExperienceFormPage extends StatefulWidget {
 }
 
 class _ExperienceFormPageState extends State<ExperienceFormPage> {
+  final _formKey = GlobalKey<FormState>();
+  final _titleController = TextEditingController();
+  final _descriptionController = TextEditingController();
+  final _thumbnailController = TextEditingController();
+  final _startController = TextEditingController();
+  final _endController = TextEditingController();
+  ExperienceCategory? _category;
+  bool _isOngoing = true;
+  bool _attemptedSave = false;
+  ExperienceDraft? _savedExperience;
+
+  @override
+  void dispose() {
+    for (final controller in [
+      _titleController,
+      _descriptionController,
+      _thumbnailController,
+      _startController,
+      _endController,
+    ]) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  void _markDirty() {
+    if (_savedExperience != null) {
+      setState(() => _savedExperience = null);
+    }
+  }
+
+  String? _requiredText(String? value, String label) {
+    return value == null || value.trim().isEmpty ? '$label wajib diisi.' : null;
+  }
+
+  String? _validateThumbnail(String? value) {
+    final text = value?.trim() ?? '';
+    if (text.isEmpty) return null;
+    final uri = Uri.tryParse(text);
+    final host = uri?.host ?? '';
+    final labels = host.split('.');
+    final domainLabel = RegExp(
+      r'^[a-zA-Z0-9\u00a1-\uffff](?:[a-zA-Z0-9\u00a1-\uffff-]{0,61}[a-zA-Z0-9\u00a1-\uffff])?$',
+    );
+    var validHost =
+        host == 'localhost' ||
+        host.contains(':') || // Uri parsing already validates IPv6 syntax.
+        (labels.length > 1 && labels.every(domainLabel.hasMatch));
+    if (RegExp(r'^[0-9.]+$').hasMatch(host)) {
+      validHost =
+          labels.length == 4 &&
+          labels.every((label) {
+            final number = int.tryParse(label);
+            return number != null && number >= 0 && number <= 255;
+          });
+    }
+    if (text.runes.length > 200 ||
+        RegExp(r'\s').hasMatch(text) ||
+        uri == null ||
+        !['http', 'https'].contains(uri.scheme) ||
+        !validHost ||
+        (uri.hasPort && uri.port > 65535)) {
+      return 'Gunakan URL http:// atau https:// yang valid (maks. 200 karakter).';
+    }
+    return null;
+  }
+
+  // DateTime normalizes impossible dates; compare components to reject them.
+  DateTime? _parseDate(String value) {
+    final match = RegExp(r'^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})$')
+        .firstMatch(value.trim());
+    if (match == null) return null;
+    final parts = [for (var i = 1; i <= 5; i++) int.parse(match.group(i)!)];
+    if (parts[0] < 1) return null;
+    final date = DateTime.utc(parts[0], parts[1], parts[2], parts[3], parts[4]);
+    if (date.year != parts[0] ||
+        date.month != parts[1] ||
+        date.day != parts[2] ||
+        date.hour != parts[3] ||
+        date.minute != parts[4]) {
+      return null;
+    }
+    return date;
+  }
+
+  String? _validateDate(String? value, {bool isEnd = false}) {
+    if (isEnd && _isOngoing) return null;
+    if (value == null || value.trim().isEmpty) {
+      return isEnd
+          ? 'Isi tanggal akhir atau aktifkan Masih berlangsung.'
+          : null;
+    }
+    final date = _parseDate(value);
+    if (date == null) return 'Gunakan tanggal valid: YYYY-MM-DD HH:mm (UTC).';
+    final start = _parseDate(_startController.text);
+    if (isEnd && start != null && date.isBefore(start)) {
+      return 'Tanggal akhir tidak boleh sebelum tanggal mulai.';
+    }
+    return null;
+  }
+
+  Future<void> _pickDateTime(TextEditingController controller) async {
+    final current = _parseDate(controller.text) ?? DateTime.now().toUtc();
+    final date = await showDatePicker(
+      context: context,
+      initialDate: current,
+      firstDate: DateTime(1),
+      lastDate: DateTime(9999, 12, 31),
+      helpText: 'Pilih tanggal (UTC)',
+    );
+    if (date == null || !mounted) return;
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(hour: current.hour, minute: current.minute),
+      helpText: 'Pilih waktu (UTC)',
+    );
+    if (time == null || !mounted) return;
+    String two(int value) => value.toString().padLeft(2, '0');
+    controller.text =
+        '${date.year.toString().padLeft(4, '0')}-'
+        '${two(date.month)}-${two(date.day)} ${two(time.hour)}:${two(time.minute)}';
+    _markDirty();
+  }
+
+  void _save() {
+    setState(() {
+      _attemptedSave = true;
+      _savedExperience = null;
+    });
+    final invalidFields = _formKey.currentState!.validateGranularly();
+    if (invalidFields.isNotEmpty) {
+      Scrollable.ensureVisible(
+        invalidFields.first.context,
+        alignment: 0.15,
+        duration: const Duration(milliseconds: 250),
+      );
+      return;
+    }
+    FocusScope.of(context).unfocus();
+    setState(() {
+      final thumbnail = _thumbnailController.text.trim();
+      _savedExperience = ExperienceDraft(
+        title: _titleController.text.trim(),
+        description: _descriptionController.text.trim(),
+        category: _category!,
+        thumbnail: thumbnail.isEmpty ? null : thumbnail,
+        startedAt: _parseDate(_startController.text),
+        endedAt: _isOngoing ? null : _parseDate(_endController.text),
+      );
+    });
+  }
+
+  Widget _dateField({required bool isEnd}) {
+    final enabled = !isEnd || !_isOngoing;
+    final controller = isEnd ? _endController : _startController;
+    return TextFormField(
+      key: ValueKey(isEnd ? 'ended_at' : 'started_at'),
+      controller: controller,
+      enabled: enabled,
+      keyboardType: TextInputType.datetime,
+      textInputAction: TextInputAction.next,
+      decoration: InputDecoration(
+        labelText: isEnd
+            ? 'Tanggal akhir (UTC)'
+            : 'Tanggal mulai (UTC, opsional)',
+        hintText: 'YYYY-MM-DD HH:mm',
+        helperText: isEnd && _isOngoing
+            ? 'Tidak diperlukan untuk pengalaman yang masih berlangsung.'
+            : 'YYYY-MM-DD HH:mm · gunakan waktu UTC.',
+        suffixIcon: IconButton(
+          tooltip: isEnd ? 'Pilih tanggal akhir' : 'Pilih tanggal mulai',
+          onPressed: enabled ? () => _pickDateTime(controller) : null,
+          icon: const Icon(Icons.calendar_month_outlined),
+        ),
+      ),
+      validator: (value) => _validateDate(value, isEnd: isEnd),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isNarrow = MediaQuery.sizeOf(context).width < 600;
@@ -49,6 +229,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
         child: SizedBox.expand(
           child: SafeArea(
             child: SingleChildScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               padding: EdgeInsets.fromLTRB(
                 isNarrow ? 16 : 28,
                 isNarrow ? 16 : 24,
@@ -90,13 +271,171 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                         ),
                         const SizedBox(height: 16),
                         const Text(
-                          'Halaman ini akan digunakan untuk menambahkan '
-                          'pengalaman ke portofolio. Formulirnya akan '
-                          'tersedia pada tahap berikutnya.',
+                          'Ceritakan peran, kegiatan, dan hal yang kamu pelajari. '
+                          'Judul, deskripsi, dan kategori wajib diisi.',
                           style: TextStyle(
                             color: PortfolioColors.muted,
                             fontSize: 16,
                             height: 1.6,
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+                        Form(
+                          key: _formKey,
+                          onChanged: _markDirty,
+                          autovalidateMode: _attemptedSave
+                              ? AutovalidateMode.onUserInteraction
+                              : AutovalidateMode.disabled,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              TextFormField(
+                                key: const ValueKey('title'),
+                                controller: _titleController,
+                                textCapitalization:
+                                    TextCapitalization.sentences,
+                                textInputAction: TextInputAction.next,
+                                decoration: const InputDecoration(
+                                  labelText: 'Judul *',
+                                  hintText: 'Contoh: Koordinator acara kampus',
+                                  helperText: 'Maksimal 255 karakter.',
+                                ),
+                                validator: (value) {
+                                  final required = _requiredText(
+                                    value,
+                                    'Judul',
+                                  );
+                                  if (required != null) return required;
+                                  return value!.trim().runes.length > 255
+                                      ? 'Judul maksimal 255 karakter.'
+                                      : null;
+                                },
+                              ),
+                              const SizedBox(height: 24),
+                              TextFormField(
+                                key: const ValueKey('description'),
+                                controller: _descriptionController,
+                                minLines: 4,
+                                maxLines: 8,
+                                keyboardType: TextInputType.multiline,
+                                textCapitalization:
+                                    TextCapitalization.sentences,
+                                decoration: const InputDecoration(
+                                  labelText: 'Deskripsi *',
+                                  alignLabelWithHint: true,
+                                  hintText:
+                                      'Apa yang kamu kerjakan dan pelajari?',
+                                ),
+                                validator: (value) =>
+                                    _requiredText(value, 'Deskripsi'),
+                              ),
+                              const SizedBox(height: 24),
+                              DropdownButtonFormField<ExperienceCategory>(
+                                key: const ValueKey('category'),
+                                isExpanded: true,
+                                decoration: const InputDecoration(
+                                  labelText: 'Kategori *',
+                                ),
+                                items: [
+                                  for (final category
+                                      in ExperienceCategory.values)
+                                    DropdownMenuItem(
+                                      value: category,
+                                      child: Text(category.label),
+                                    ),
+                                ],
+                                onChanged: (value) =>
+                                    setState(() => _category = value),
+                                validator: (value) => value == null
+                                    ? 'Pilih kategori pengalaman.'
+                                    : null,
+                              ),
+                              const SizedBox(height: 24),
+                              TextFormField(
+                                key: const ValueKey('thumbnail'),
+                                controller: _thumbnailController,
+                                keyboardType: TextInputType.url,
+                                textInputAction: TextInputAction.next,
+                                autocorrect: false,
+                                decoration: const InputDecoration(
+                                  labelText: 'URL thumbnail (opsional)',
+                                  hintText:
+                                      'https://example.com/experience.jpg',
+                                ),
+                                validator: _validateThumbnail,
+                              ),
+                              const SizedBox(height: 24),
+                              _dateField(isEnd: false),
+                              const SizedBox(height: 16),
+                              SwitchListTile.adaptive(
+                                contentPadding: EdgeInsets.zero,
+                                title: const Text('Masih berlangsung'),
+                                subtitle: const Text(
+                                  'Aktifkan jika belum ada tanggal akhir.',
+                                ),
+                                value: _isOngoing,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _isOngoing = value;
+                                    _savedExperience = null;
+                                    if (value) _endController.clear();
+                                  });
+                                },
+                              ),
+                              const SizedBox(height: 16),
+                              _dateField(isEnd: true),
+                              const SizedBox(height: 32),
+                              DecoratedBox(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(18),
+                                  gradient: const LinearGradient(
+                                    colors: [
+                                      PortfolioColors.pink,
+                                      PortfolioColors.yellow,
+                                    ],
+                                  ),
+                                ),
+                                child: FilledButton.icon(
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: Colors.transparent,
+                                    foregroundColor: PortfolioColors.ink,
+                                    minimumSize: const Size(
+                                      double.infinity,
+                                      56,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(18),
+                                      side: const BorderSide(
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    textStyle: const TextStyle(
+                                      fontFamily: 'DM Sans',
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  onPressed: _save,
+                                  icon: const Icon(Icons.check_rounded),
+                                  label: const Text('Save'),
+                                ),
+                              ),
+                              if (_savedExperience != null) ...[
+                                const SizedBox(height: 16),
+                                Semantics(
+                                  liveRegion: true,
+                                  child: Text(
+                                    'Data “${_savedExperience!.title}” valid dan siap '
+                                    'digunakan. Belum dikirim ke server.',
+                                    key: const ValueKey('save_status'),
+                                    style: const TextStyle(
+                                      color: PortfolioColors.ink,
+                                      height: 1.5,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
                         ),
                       ],
