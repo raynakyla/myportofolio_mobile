@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:myportofolio_mobile/experience_form.dart';
+import 'package:myportofolio_mobile/portfolio_drawer.dart';
 import 'package:myportofolio_mobile/portfolio_style.dart';
 
 const _compactWidth = 600.0;
+
+void _openExperience(BuildContext context) {
+  Navigator.push(
+    context,
+    MaterialPageRoute<void>(builder: (context) => const ExperienceFormPage()),
+  );
+}
 
 class ItemHomepage {
   const ItemHomepage(this.name, this.icon, this.accent, this.accentInk);
@@ -47,7 +55,12 @@ class MyHomePage extends StatelessWidget {
     final horizontalPadding = isNarrow ? 16.0 : 28.0;
 
     return Scaffold(
+      drawer: PortfolioDrawer(
+        currentDestination: PortfolioDestination.home,
+        onDestinationSelected: (_) => _openExperience(context),
+      ),
       appBar: AppBar(
+        leading: const DrawerButton(color: PortfolioColors.mauve),
         toolbarHeight: isNarrow ? 72 : 88,
         titleSpacing: horizontalPadding,
         backgroundColor: PortfolioColors.cream,
@@ -508,12 +521,7 @@ class ItemCard extends StatelessWidget {
           final messenger = ScaffoldMessenger.of(context);
           messenger.removeCurrentSnackBar();
           if (item.name == 'Tambah Experience') {
-            Navigator.push(
-              context,
-              MaterialPageRoute<void>(
-                builder: (context) => const ExperienceFormPage(),
-              ),
-            );
+            _openExperience(context);
             return;
           }
           messenger.showSnackBar(

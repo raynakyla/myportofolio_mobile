@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:myportofolio_mobile/experience_form.dart';
 import 'package:myportofolio_mobile/main.dart';
+import 'package:myportofolio_mobile/menu.dart';
+import 'package:myportofolio_mobile/portfolio_drawer.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -68,6 +70,90 @@ void main() {
   });
 
   for (final width in [390.0, 1280.0]) {
+    testWidgets('drawer reuses Home and keeps Back predictable at $width', (
+      tester,
+    ) async {
+      tester.view.physicalSize = Size(width, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(const MyApp());
+
+      final home = tester.element(find.byType(MyHomePage));
+      final navigator = tester.state<NavigatorState>(find.byType(Navigator));
+      Finder drawerTile(String label) => find.descendant(
+        of: find.byType(PortfolioDrawer),
+        matching: find.widgetWithText(ListTile, label),
+      );
+      Future<void> openDrawer() async {
+        await tester.tap(find.byType(DrawerButton));
+        await tester.pumpAndSettle();
+      }
+
+      await openDrawer();
+      expect(tester.widget<ListTile>(drawerTile('Home')).selected, isTrue);
+      await tester.tap(drawerTile('Home'));
+      await tester.pumpAndSettle();
+      expect(
+        tester.state<ScaffoldState>(find.byType(Scaffold)).isDrawerOpen,
+        isFalse,
+      );
+      expect(navigator.canPop(), isFalse);
+
+      for (var cycle = 0; cycle < 3; cycle++) {
+        await openDrawer();
+        await tester.tap(drawerTile('Tambah Experience'));
+        await tester.pumpAndSettle();
+        final form = tester.element(find.byType(ExperienceFormPage));
+        expect(navigator.canPop(), isTrue);
+        expect(find.byType(MyHomePage, skipOffstage: false), findsOneWidget);
+        expect(
+          find.byType(ExperienceFormPage, skipOffstage: false),
+          findsOneWidget,
+        );
+
+        await openDrawer();
+        expect(
+          tester.widget<ListTile>(drawerTile('Tambah Experience')).selected,
+          isTrue,
+        );
+        await tester.tap(drawerTile('Tambah Experience'));
+        await tester.pumpAndSettle();
+        expect(tester.element(find.byType(ExperienceFormPage)), same(form));
+        expect(
+          tester.state<ScaffoldState>(find.byType(Scaffold)).isDrawerOpen,
+          isFalse,
+        );
+
+        await openDrawer();
+        await tester.tap(drawerTile('Home'));
+        await tester.pumpAndSettle();
+        expect(tester.element(find.byType(MyHomePage)), same(home));
+        expect(
+          find.byType(ExperienceFormPage, skipOffstage: false),
+          findsNothing,
+        );
+        expect(navigator.canPop(), isFalse);
+      }
+
+      await openDrawer();
+      await tester.tap(drawerTile('Tambah Experience'));
+      await tester.pumpAndSettle();
+      await openDrawer();
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.byType(ExperienceFormPage), findsOneWidget);
+      expect(
+        tester.state<ScaffoldState>(find.byType(Scaffold)).isDrawerOpen,
+        isFalse,
+      );
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
+      expect(tester.element(find.byType(MyHomePage)), same(home));
+      expect(navigator.canPop(), isFalse);
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets('opens Experience and returns Home at width $width', (
       tester,
     ) async {

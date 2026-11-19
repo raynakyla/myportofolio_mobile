@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:myportofolio_mobile/portfolio_drawer.dart';
 import 'package:myportofolio_mobile/portfolio_style.dart';
 
 class ExperienceFormPage extends StatefulWidget {
@@ -14,8 +15,16 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
     final isNarrow = MediaQuery.sizeOf(context).width < 600;
 
     return Scaffold(
+      drawer: PortfolioDrawer(
+        currentDestination: PortfolioDestination.experience,
+        onDestinationSelected: (_) {
+          // Home stays at the bottom of the stack; reuse it instead of pushing.
+          Navigator.of(context).popUntil((route) => route.isFirst);
+        },
+      ),
       appBar: AppBar(
         leading: const BackButton(),
+        actions: const [DrawerButton()],
         title: const Text('Tambah Experience'),
         titleTextStyle: const TextStyle(
           fontFamily: 'Playfair Display',
