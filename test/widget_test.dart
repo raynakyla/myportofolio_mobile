@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:myportofolio_mobile/experience_form.dart';
 import 'package:myportofolio_mobile/main.dart';
-import 'package:myportofolio_mobile/menu.dart';
-import 'package:myportofolio_mobile/portfolio_drawer.dart';
+import 'package:myportofolio_mobile/screens/experience_form_page.dart';
+import 'package:myportofolio_mobile/screens/home_page.dart';
+import 'package:myportofolio_mobile/widgets/portfolio_drawer.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

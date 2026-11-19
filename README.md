@@ -1,10 +1,10 @@
 # MyPortfolio Mobile
 
 MyPortfolio Mobile adalah aplikasi portofolio Flutter yang dimulai pada Tutorial
-8 PBP dan dilanjutkan pada Tugas 7 di repositori mobile yang sama. Proyek ini
-terpisah dari portofolio Django. Halaman utamanya memakai data statis tanpa
-koneksi API dan berisi tiga kartu identitas serta tiga kartu aksi yang
-menampilkan SnackBar.
+8 PBP, Tugas 7, dan Tutorial 9 di repositori mobile yang sama. Proyek ini
+terpisah dari portofolio Django. Home memakai data statis, sedangkan form
+Experience menyiapkan snapshot lokal dan menampilkannya dalam dialog ringkasan.
+Belum ada koneksi API atau pengiriman data ke Django.
 
 ## Identitas
 
@@ -15,8 +15,12 @@ menampilkan SnackBar.
 ## Fitur yang Sudah Tersedia
 
 - Tiga kartu informasi terpisah untuk nama, NPM, dan kelas.
-- Tiga tombol menu: **Lihat Proyek**, **Tambah Proyek**, dan **Logout**.
-- SnackBar dengan pesan yang menyesuaikan tombol yang ditekan.
+- Tiga tombol menu: **Lihat Proyek**, **Tambah Experience**, dan **Logout**.
+- SnackBar untuk Lihat Proyek dan Logout; Tambah Experience membuka form.
+- Drawer Home dan form dengan navigasi tanpa menumpuk salinan halaman.
+- Form Experience dengan validasi, kategori sesuai model Django lokal, dan
+  tanggal/waktu UTC. Dialog ringkasan memakai snapshot data valid dan tetap
+  mempertahankan isian setelah ditutup.
 - Layout responsif untuk layar lebar dan layar sempit.
 - Tema pastel dengan gradient, panel kaca transparan, sudut membulat, dan
   bayangan lembut.
@@ -24,8 +28,8 @@ menampilkan SnackBar.
   Kedua font dibundel secara lokal sehingga dapat digunakan tanpa koneksi
   internet.
 
-Ketiga tombol menu saat ini baru menampilkan SnackBar. Navigasi ke daftar
-proyek, proses menambahkan proyek, dan logout sungguhan belum diimplementasikan.
+Daftar proyek dan logout sungguhan belum diimplementasikan. Save pada form
+Experience hanya memvalidasi dan menampilkan ringkasan lokal.
 
 ## Prasyarat
 
@@ -57,11 +61,26 @@ Dokumentasi resmi Flutter dapat dibaca di
 
 | Lokasi | Fungsi |
 | --- | --- |
-| `lib/main.dart` | Entry point aplikasi serta tempat konfigurasi `MaterialApp`, Material 3, warna, dan font utama. |
-| `lib/menu.dart` | Berisi halaman utama, model `ItemHomepage`, `InfoCard`, `ItemCard`, layout responsif, dan logika SnackBar. |
+| `lib/main.dart` | Entry point, `MaterialApp`, dan konfigurasi tema serta font utama. |
+| `lib/screens/home_page.dart` | Halaman Home beserta widget dan metadata kartu yang hanya dipakai Home. |
+| `lib/screens/experience_form_page.dart` | Halaman Tambah Experience, state isian, validasi, dan aksi Save. |
+| `lib/widgets/portfolio_drawer.dart` | Drawer dan pilihan navigasi yang dipakai kedua halaman. |
+| `lib/widgets/experience_summary_dialog.dart` | Dialog ringkasan dari snapshot Experience yang sudah valid. |
+| `lib/widgets/portfolio_glass_panel.dart` | Panel glass bersama untuk Home, form, drawer, dan dialog. |
+| `lib/models/experience_data.dart` | `ExperienceDraft` dan `ExperienceCategory`, tanpa dependensi widget Flutter. |
+| `lib/theme/portfolio_colors.dart` | Palet warna bersama agar halaman dan widget tetap konsisten. |
 | `assets/fonts/` | Menyimpan font Playfair Display dan DM Sans beserta lisensinya agar tipografi tersedia secara offline. |
-| `test/widget_test.dart` | Widget test untuk identitas pemilik, ketiga tombol menu, SnackBar, dan layout pada viewport selebar 320 px. |
+| `test/widget_test.dart` | Tes Home, SnackBar, navigasi kartu/drawer, Back, dan layout responsif. |
+| `test/experience_form_test.dart` | Tes validasi, snapshot ringkasan, retensi isian, scroll panjang, dan inset keyboard. |
 | `pubspec.yaml` | Mendefinisikan metadata proyek, dependency, dan registrasi aset font beserta weight yang digunakan. |
+
+`screens/` mengelompokkan halaman yang dibuka lewat Navigator; `widgets/`
+menyimpan komponen antarmuka yang dipakai halaman; `models/` menyimpan data;
+dan `theme/` menyimpan palet. Widget khusus Home tetap berada di file Home
+karena belum dipakai halaman lain. Pada Tutorial 9 tahap 5, `menu.dart` dipindah
+menjadi `screens/home_page.dart`, dan `portfolio_style.dart` dipisah menjadi
+palet warna serta widget panel glass. Pemindahan ini tidak mengubah tampilan,
+validasi, atau alur Navigator.
 
 ## Pemeriksaan Kode
 
@@ -73,9 +92,11 @@ flutter analyze
 flutter test
 ```
 
-Tes yang tersedia memeriksa identitas pemilik, ketiga tombol, pesan SnackBar
-untuk tiap aksi, dan layout selebar 320 px. Preview Chrome melengkapi tes
-untuk memeriksa tampilan dan interaksi langsung.
+Seluruh 17 tes memeriksa Home, SnackBar, navigasi berulang lewat drawer,
+Back, validasi form, isi ringkasan, dan retensi isian setelah dialog ditutup.
+Pemeriksaan layout mencakup lebar 320, 390, dan 1280 px, deskripsi panjang,
+teks diperbesar, serta inset keyboard. Preview Chrome melengkapi tes untuk
+memeriksa tampilan dan interaksi langsung.
 
 ## Font dan Lisensi
 
@@ -96,8 +117,8 @@ yang digunakan tersedia di [assets/fonts/README.md](assets/fonts/README.md).
 ## Riwayat dan Refleksi
 
 - **Tutorial 8.** Proyek Flutter dibuat di repositori mobile ini. Halaman utama
-  dipisahkan ke `lib/menu.dart`, lalu diisi identitas, tiga aksi dengan SnackBar,
-  dan font lokal.
+  dipisahkan ke `menu.dart` (sekarang `lib/screens/home_page.dart`), lalu diisi
+  identitas, tiga aksi dengan SnackBar, dan font lokal.
 - **Tugas 7.** Layout ponsel dirapatkan supaya aksi pertama lebih mudah terlihat.
   Di desktop, tepi AppBar, hero, dan grid disejajarkan. Kartu aksi bisa bertambah
   tinggi saat teks membungkus. Tema kaca pastel diperhalus dengan permukaan icy
@@ -124,8 +145,8 @@ yang digunakan tersedia di [assets/fonts/README.md](assets/fonts/README.md).
 2. **Widget apa saja yang dipakai di aplikasi ini?**
 
    Daftar ini mengikuti konstruktor widget di `lib/main.dart` dan
-   `lib/menu.dart`. Keduanya memakai `package:flutter/material.dart`, dan
-   `main.dart` juga mengimpor `menu.dart`.
+   `lib/screens/home_page.dart`. Keduanya memakai `package:flutter/material.dart`,
+   dan `main.dart` juga mengimpor `screens/home_page.dart`.
 
    **Widget buatan proyek**
 
@@ -235,7 +256,7 @@ yang digunakan tersedia di [assets/fonts/README.md](assets/fonts/README.md).
    - **Hot reload** memuat perubahan kode Dart dan membangun ulang widget
      sambil mempertahankan state yang sedang berjalan. `main()` dan
      `initState()` pada state yang sudah ada tidak dipanggil ulang. Ini cocok
-     untuk mencoba perubahan padding atau warna kartu di `menu.dart` saat
+     untuk mencoba perubahan padding atau warna kartu di `screens/home_page.dart` saat
      aplikasi sedang berjalan dalam mode debug.
    - **Hot restart** memulai ulang aplikasi Flutter dari `main()` dan
      menghapus state di memori. Saat objek `State` baru dibuat dan dipasang,

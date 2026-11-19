@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:myportofolio_mobile/experience_form.dart';
-import 'package:myportofolio_mobile/portfolio_drawer.dart';
-import 'package:myportofolio_mobile/portfolio_style.dart';
+import 'package:myportofolio_mobile/screens/experience_form_page.dart';
+import 'package:myportofolio_mobile/theme/portfolio_colors.dart';
+import 'package:myportofolio_mobile/widgets/portfolio_drawer.dart';
+import 'package:myportofolio_mobile/widgets/portfolio_glass_panel.dart';
 
 const _compactWidth = 600.0;
 

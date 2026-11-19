@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:myportofolio_mobile/experience_data.dart';
-import 'package:myportofolio_mobile/experience_summary_dialog.dart';
-import 'package:myportofolio_mobile/portfolio_drawer.dart';
-import 'package:myportofolio_mobile/portfolio_style.dart';
+import 'package:myportofolio_mobile/models/experience_data.dart';
+import 'package:myportofolio_mobile/theme/portfolio_colors.dart';
+import 'package:myportofolio_mobile/widgets/experience_summary_dialog.dart';
+import 'package:myportofolio_mobile/widgets/portfolio_drawer.dart';
+import 'package:myportofolio_mobile/widgets/portfolio_glass_panel.dart';
 
 class ExperienceFormPage extends StatefulWidget {
   const ExperienceFormPage({super.key});

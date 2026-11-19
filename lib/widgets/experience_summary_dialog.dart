@@ -1,8 +1,9 @@
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
-import 'package:myportofolio_mobile/experience_data.dart';
-import 'package:myportofolio_mobile/portfolio_style.dart';
+import 'package:myportofolio_mobile/models/experience_data.dart';
+import 'package:myportofolio_mobile/theme/portfolio_colors.dart';
+import 'package:myportofolio_mobile/widgets/portfolio_glass_panel.dart';
 
 class ExperienceSummaryDialog extends StatelessWidget {
   const ExperienceSummaryDialog({super.key, required this.experience});

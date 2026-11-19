@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:myportofolio_mobile/experience_data.dart';
-import 'package:myportofolio_mobile/experience_summary_dialog.dart';
 import 'package:myportofolio_mobile/main.dart';
+import 'package:myportofolio_mobile/models/experience_data.dart';
+import 'package:myportofolio_mobile/widgets/experience_summary_dialog.dart';
 
 Finder field(String name) => find.byKey(ValueKey(name));
 

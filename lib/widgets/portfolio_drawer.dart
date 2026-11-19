@@ -1,7 +1,8 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:myportofolio_mobile/portfolio_style.dart';
+import 'package:myportofolio_mobile/theme/portfolio_colors.dart';
+import 'package:myportofolio_mobile/widgets/portfolio_glass_panel.dart';
 
 enum PortfolioDestination {
   home('Home', Icons.home_outlined),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:myportofolio_mobile/menu.dart';
-import 'package:myportofolio_mobile/portfolio_style.dart';
+import 'package:myportofolio_mobile/screens/home_page.dart';
+import 'package:myportofolio_mobile/theme/portfolio_colors.dart';
 
 void main() {
   runApp(const MyApp());
