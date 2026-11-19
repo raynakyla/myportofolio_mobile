@@ -1,5 +1,7 @@
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:myportofolio_mobile/experience_form.dart';
 import 'package:myportofolio_mobile/main.dart';
 
 void main() {
@@ -28,7 +30,7 @@ void main() {
     expect(find.text('Rayna Kayla Rayvanka'), findsWidgets);
     expect(find.text('PBP F'), findsOneWidget);
     expect(find.text('Lihat Proyek'), findsOneWidget);
-    expect(find.text('Tambah Proyek'), findsOneWidget);
+    expect(find.text('Tambah Experience'), findsOneWidget);
     expect(find.text('Logout'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
@@ -44,20 +46,11 @@ void main() {
       findsOneWidget,
     );
 
-    await tester.ensureVisible(find.text('Tambah Proyek'));
-    await tester.tap(find.text('Tambah Proyek'));
-    await tester.pump();
-    expect(
-      find.text('Kamu telah menekan tombol Tambah Proyek!'),
-      findsOneWidget,
-    );
-    expect(find.text('Kamu telah menekan tombol Lihat Proyek!'), findsNothing);
-
     await tester.ensureVisible(find.text('Logout'));
     await tester.tap(find.text('Logout'));
     await tester.pump();
     expect(find.text('Kamu telah menekan tombol Logout!'), findsOneWidget);
-    expect(find.text('Kamu telah menekan tombol Tambah Proyek!'), findsNothing);
+    expect(find.text('Kamu telah menekan tombol Lihat Proyek!'), findsNothing);
   });
 
   testWidgets('fits a narrow viewport without overflow', (tester) async {
@@ -70,7 +63,37 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.text('Lihat Proyek'), findsOneWidget);
-    expect(find.text('Tambah Proyek'), findsOneWidget);
+    expect(find.text('Tambah Experience'), findsOneWidget);
     expect(find.text('Logout'), findsOneWidget);
   });
+
+  for (final width in [390.0, 1280.0]) {
+    testWidgets('opens Experience and returns Home at width $width', (
+      tester,
+    ) async {
+      tester.view.physicalSize = Size(width, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(const MyApp());
+      await tester.ensureVisible(find.text('Tambah Experience'));
+      await tester.tap(find.text('Tambah Experience'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ExperienceFormPage), findsOneWidget);
+      expect(find.text('Tambah Experience'), findsOneWidget);
+      expect(find.text('Setiap pengalaman punya cerita.'), findsOneWidget);
+      expect(find.byType(SnackBar), findsNothing);
+      expect(tester.takeException(), isNull);
+
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ExperienceFormPage), findsNothing);
+      expect(find.text('Hi, I’m Vanka.'), findsOneWidget);
+      expect(find.text('Tambah Experience'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  }
 }

@@ -1,16 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:myportofolio_mobile/experience_form.dart';
+import 'package:myportofolio_mobile/portfolio_style.dart';
 
 const _compactWidth = 600.0;
-
-class _PortfolioColors {
-  static const cream = Color(0xFFFFF9F3);
-  static const pink = Color(0xFFF6CEDD);
-  static const yellow = Color(0xFFFBE8A6);
-  static const lavender = Color(0xFFDDD8F6);
-  static const ink = Color(0xFF2F2A2D);
-  static const muted = Color(0xFF746C70);
-  static const mauve = Color(0xFF9D5F78);
-}
 
 class ItemHomepage {
   const ItemHomepage(this.name, this.icon, this.accent, this.accentInk);
@@ -36,15 +28,15 @@ class MyHomePage extends StatelessWidget {
       Color(0xFF884366),
     ),
     ItemHomepage(
-      'Tambah Proyek',
+      'Tambah Experience',
       Icons.add_circle_rounded,
-      _PortfolioColors.yellow,
+      PortfolioColors.yellow,
       Color(0xFF765621),
     ),
     ItemHomepage(
       'Logout',
       Icons.logout_rounded,
-      _PortfolioColors.lavender,
+      PortfolioColors.lavender,
       Color(0xFF605185),
     ),
   ];
@@ -58,7 +50,7 @@ class MyHomePage extends StatelessWidget {
       appBar: AppBar(
         toolbarHeight: isNarrow ? 72 : 88,
         titleSpacing: horizontalPadding,
-        backgroundColor: _PortfolioColors.cream,
+        backgroundColor: PortfolioColors.cream,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         title: Center(
@@ -72,7 +64,7 @@ class MyHomePage extends StatelessWidget {
                 border: Border.all(color: Colors.white.withValues(alpha: 0.78)),
                 gradient: LinearGradient(
                   colors: [
-                    _PortfolioColors.pink.withValues(alpha: 0.70),
+                    PortfolioColors.pink.withValues(alpha: 0.70),
                     const Color(0xFFFDF1F7).withValues(alpha: 0.82),
                   ],
                 ),
@@ -91,7 +83,7 @@ class MyHomePage extends StatelessWidget {
                     'Rayna.',
                     style: TextStyle(
                       fontFamily: 'Playfair Display',
-                      color: _PortfolioColors.mauve,
+                      color: PortfolioColors.mauve,
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
                       fontStyle: FontStyle.italic,
@@ -101,7 +93,7 @@ class MyHomePage extends StatelessWidget {
                   Text(
                     title.toUpperCase(),
                     style: const TextStyle(
-                      color: _PortfolioColors.mauve,
+                      color: PortfolioColors.mauve,
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 2,
@@ -122,7 +114,7 @@ class MyHomePage extends StatelessWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    _PortfolioColors.cream,
+                    PortfolioColors.cream,
                     Color(0xFFFFF5F8),
                     Color(0xFFFDF7FB),
                   ],
@@ -134,17 +126,17 @@ class MyHomePage extends StatelessWidget {
           const Positioned(
             top: -160,
             left: -125,
-            child: _PastelOrb(color: _PortfolioColors.yellow, size: 370),
+            child: _PastelOrb(color: PortfolioColors.yellow, size: 370),
           ),
           const Positioned(
             top: 60,
             right: -160,
-            child: _PastelOrb(color: _PortfolioColors.pink, size: 430),
+            child: _PastelOrb(color: PortfolioColors.pink, size: 430),
           ),
           const Positioned(
             bottom: -180,
             left: 80,
-            child: _PastelOrb(color: _PortfolioColors.lavender, size: 390),
+            child: _PastelOrb(color: PortfolioColors.lavender, size: 390),
           ),
           SafeArea(
             child: SingleChildScrollView(
@@ -168,7 +160,7 @@ class MyHomePage extends StatelessWidget {
                         const Text(
                           'EXPLORE',
                           style: TextStyle(
-                            color: _PortfolioColors.muted,
+                            color: PortfolioColors.muted,
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
                             letterSpacing: 2.2,
@@ -179,7 +171,7 @@ class MyHomePage extends StatelessWidget {
                           'Where to next?',
                           style: TextStyle(
                             fontFamily: 'Playfair Display',
-                            color: _PortfolioColors.ink,
+                            color: PortfolioColors.ink,
                             fontSize: isNarrow ? 26 : 30,
                             fontWeight: FontWeight.w600,
                             letterSpacing: -0.3,
@@ -270,163 +262,135 @@ class _HeroCard extends StatelessWidget {
     final isNarrow = MediaQuery.sizeOf(context).width < _compactWidth;
     final radius = BorderRadius.circular(isNarrow ? 25 : 32);
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: radius,
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xE0FFFDFE), Color(0xCCFFF0F7), Color(0xA6F5D1E5)],
-          stops: [0, 0.5, 1],
-        ),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x1C89536C),
-            blurRadius: 42,
-            offset: Offset(0, 16),
+    return PortfolioGlassPanel(
+      borderRadius: radius,
+      padding: EdgeInsets.all(isNarrow ? 16 : 48),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'COMPUTER SCIENCE · UNIVERSITAS INDONESIA',
+            style: TextStyle(
+              color: Color(0xFF655D61),
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              letterSpacing: isNarrow ? 1.2 : 1.7,
+              height: isNarrow ? 1.3 : 1.5,
+            ),
           ),
-        ],
-      ),
-      child: Container(
-        width: double.infinity,
-        padding: EdgeInsets.all(isNarrow ? 16 : 48),
-        decoration: BoxDecoration(
-          border: Border.all(color: const Color(0xF2FFFFFF)),
-          borderRadius: radius,
-          gradient: const RadialGradient(
-            center: Alignment(0.78, -0.9),
-            radius: 1.05,
-            colors: [Color(0xF5FFFFFF), Color(0x70FFF9FD), Color(0x00FFF9FD)],
-            stops: [0, 0.40, 1],
+          SizedBox(height: isNarrow ? 8 : 20),
+          Text(
+            'Hi, I’m Vanka.',
+            style: TextStyle(
+              fontFamily: 'Playfair Display',
+              color: PortfolioColors.ink,
+              fontSize: isNarrow ? 34 : 66,
+              fontWeight: FontWeight.w700,
+              letterSpacing: isNarrow ? -0.6 : -1.2,
+              height: 1.12,
+            ),
           ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'COMPUTER SCIENCE · UNIVERSITAS INDONESIA',
+          SizedBox(height: isNarrow ? 6 : 18),
+          Text(
+            'Rayna Kayla Rayvanka',
+            style: TextStyle(
+              color: PortfolioColors.ink,
+              fontSize: isNarrow ? 16 : 18,
+              fontWeight: FontWeight.w600,
+              letterSpacing: -0.3,
+            ),
+          ),
+          SizedBox(height: isNarrow ? 8 : 14),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 620),
+            child: Text(
+              'Computer Science student at Universitas Indonesia who somehow keeps ending up in tech projects, events, and creative spaces — usually all at the same time.',
               style: TextStyle(
-                color: Color(0xFF655D61),
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                letterSpacing: isNarrow ? 1.2 : 1.7,
-                height: isNarrow ? 1.3 : 1.5,
+                color: PortfolioColors.muted,
+                fontSize: isNarrow ? 14 : 15,
+                height: isNarrow ? 1.45 : 1.55,
               ),
             ),
-            SizedBox(height: isNarrow ? 8 : 20),
-            Text(
-              'Hi, I’m Vanka.',
-              style: TextStyle(
-                fontFamily: 'Playfair Display',
-                color: _PortfolioColors.ink,
-                fontSize: isNarrow ? 34 : 66,
-                fontWeight: FontWeight.w700,
-                letterSpacing: isNarrow ? -0.6 : -1.2,
-                height: 1.12,
-              ),
+          ),
+          SizedBox(height: isNarrow ? 14 : 32),
+          Container(height: 1, color: const Color(0x1C4D4046)),
+          SizedBox(height: isNarrow ? 10 : 22),
+          const Text(
+            'AT A GLANCE',
+            style: TextStyle(
+              color: PortfolioColors.muted,
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.8,
             ),
-            SizedBox(height: isNarrow ? 6 : 18),
-            Text(
-              'Rayna Kayla Rayvanka',
-              style: TextStyle(
-                color: _PortfolioColors.ink,
-                fontSize: isNarrow ? 16 : 18,
-                fontWeight: FontWeight.w600,
-                letterSpacing: -0.3,
-              ),
-            ),
-            SizedBox(height: isNarrow ? 8 : 14),
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 620),
-              child: Text(
-                'Computer Science student at Universitas Indonesia who somehow keeps ending up in tech projects, events, and creative spaces — usually all at the same time.',
-                style: TextStyle(
-                  color: _PortfolioColors.muted,
-                  fontSize: isNarrow ? 14 : 15,
-                  height: isNarrow ? 1.45 : 1.55,
-                ),
-              ),
-            ),
-            SizedBox(height: isNarrow ? 14 : 32),
-            Container(height: 1, color: const Color(0x1C4D4046)),
-            SizedBox(height: isNarrow ? 10 : 22),
-            const Text(
-              'AT A GLANCE',
-              style: TextStyle(
-                color: _PortfolioColors.muted,
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 1.8,
-              ),
-            ),
-            SizedBox(height: isNarrow ? 8 : 14),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final width = constraints.maxWidth;
-                const npm = InfoCard(label: 'NPM', value: '2506657283');
-                const name = InfoCard(
-                  label: 'Nama',
-                  value: 'Rayna Kayla Rayvanka',
+          ),
+          SizedBox(height: isNarrow ? 8 : 14),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final width = constraints.maxWidth;
+              const npm = InfoCard(label: 'NPM', value: '2506657283');
+              const name = InfoCard(
+                label: 'Nama',
+                value: 'Rayna Kayla Rayvanka',
+              );
+              const studentClass = InfoCard(label: 'Kelas', value: 'PBP F');
+              const cards = [npm, name, studentClass];
+
+              if (isNarrow) {
+                const gap = 8.0;
+                final halfWidth = (width - gap) / 2;
+                final textScale =
+                    MediaQuery.textScalerOf(context).scale(15) / 15;
+                final shortCardWidth = halfWidth >= 120 * textScale
+                    ? halfWidth
+                    : width;
+
+                return Wrap(
+                  spacing: gap,
+                  runSpacing: gap,
+                  children: [
+                    name,
+                    SizedBox(width: shortCardWidth, child: npm),
+                    SizedBox(width: shortCardWidth, child: studentClass),
+                  ],
                 );
-                const studentClass = InfoCard(label: 'Kelas', value: 'PBP F');
-                const cards = [npm, name, studentClass];
+              }
 
-                if (isNarrow) {
-                  const gap = 8.0;
-                  final halfWidth = (width - gap) / 2;
-                  final textScale =
-                      MediaQuery.textScalerOf(context).scale(15) / 15;
-                  final shortCardWidth = halfWidth >= 120 * textScale
-                      ? halfWidth
-                      : width;
-
-                  return Wrap(
-                    spacing: gap,
-                    runSpacing: gap,
-                    children: [
-                      name,
-                      SizedBox(width: shortCardWidth, child: npm),
-                      SizedBox(width: shortCardWidth, child: studentClass),
-                    ],
-                  );
-                }
-
-                if (width >= 720) {
-                  return Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      for (var i = 0; i < cards.length; i++) ...[
-                        if (i > 0) const SizedBox(width: 12),
-                        Expanded(child: cards[i]),
-                      ],
-                    ],
-                  );
-                }
-
-                if (width >= 500) {
-                  final cardWidth = (width - 12) / 2;
-                  return Wrap(
-                    spacing: 12,
-                    runSpacing: 12,
-                    children: [
-                      for (final card in cards)
-                        SizedBox(width: cardWidth, child: card),
-                    ],
-                  );
-                }
-
-                return Column(
+              if (width >= 720) {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     for (var i = 0; i < cards.length; i++) ...[
-                      if (i > 0) const SizedBox(height: 12),
-                      cards[i],
+                      if (i > 0) const SizedBox(width: 12),
+                      Expanded(child: cards[i]),
                     ],
                   ],
                 );
-              },
-            ),
-          ],
-        ),
+              }
+
+              if (width >= 500) {
+                final cardWidth = (width - 12) / 2;
+                return Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: [
+                    for (final card in cards)
+                      SizedBox(width: cardWidth, child: card),
+                  ],
+                );
+              }
+
+              return Column(
+                children: [
+                  for (var i = 0; i < cards.length; i++) ...[
+                    if (i > 0) const SizedBox(height: 12),
+                    cards[i],
+                  ],
+                ],
+              );
+            },
+          ),
+        ],
       ),
     );
   }
@@ -459,7 +423,7 @@ class InfoCard extends StatelessWidget {
           Text(
             label.toUpperCase(),
             style: const TextStyle(
-              color: _PortfolioColors.muted,
+              color: PortfolioColors.muted,
               fontSize: 11,
               fontWeight: FontWeight.w700,
               letterSpacing: 1.3,
@@ -469,7 +433,7 @@ class InfoCard extends StatelessWidget {
           Text(
             value,
             style: const TextStyle(
-              color: _PortfolioColors.ink,
+              color: PortfolioColors.ink,
               fontSize: 15,
               fontWeight: FontWeight.w600,
               height: 1.3,
@@ -543,10 +507,19 @@ class ItemCard extends StatelessWidget {
         onPressed: () {
           final messenger = ScaffoldMessenger.of(context);
           messenger.removeCurrentSnackBar();
+          if (item.name == 'Tambah Experience') {
+            Navigator.push(
+              context,
+              MaterialPageRoute<void>(
+                builder: (context) => const ExperienceFormPage(),
+              ),
+            );
+            return;
+          }
           messenger.showSnackBar(
             SnackBar(
               behavior: SnackBarBehavior.floating,
-              backgroundColor: _PortfolioColors.ink,
+              backgroundColor: PortfolioColors.ink,
               content: Text('Kamu telah menekan tombol ${item.name}!'),
             ),
           );
@@ -568,7 +541,7 @@ class ItemCard extends StatelessWidget {
               child: Text(
                 item.name,
                 style: const TextStyle(
-                  color: _PortfolioColors.ink,
+                  color: PortfolioColors.ink,
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
                   height: 1.25,
