@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:myportofolio_mobile/experience_data.dart';
+import 'package:myportofolio_mobile/experience_summary_dialog.dart';
 import 'package:myportofolio_mobile/portfolio_drawer.dart';
 import 'package:myportofolio_mobile/portfolio_style.dart';
 
@@ -161,6 +162,11 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
         endedAt: _isOngoing ? null : _parseDate(_endController.text),
       );
     });
+    final experience = _savedExperience!;
+    showDialog<void>(
+      context: context,
+      builder: (context) => ExperienceSummaryDialog(experience: experience),
+    );
   }
 
   Widget _dateField({required bool isEnd}) {

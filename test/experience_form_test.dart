@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:myportofolio_mobile/experience_data.dart';
+import 'package:myportofolio_mobile/experience_summary_dialog.dart';
 import 'package:myportofolio_mobile/main.dart';
 
 Finder field(String name) => find.byKey(ValueKey(name));
 
-Future<void> openForm(WidgetTester tester, {double width = 390}) async {
-  tester.view.physicalSize = Size(width, 844);
+Future<void> openForm(
+  WidgetTester tester, {
+  double width = 390,
+  double height = 844,
+}) async {
+  tester.view.physicalSize = Size(width, height);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
@@ -50,6 +56,16 @@ Future<void> save(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
+void expectSummary(WidgetTester tester, String name, String value) {
+  expect(tester.widget<Text>(field('summary_$name')).data, value);
+}
+
+Future<void> closeSummary(WidgetTester tester) async {
+  await tester.tap(find.widgetWithText(FilledButton, 'Tutup'));
+  await tester.pumpAndSettle();
+  expect(find.byType(ExperienceSummaryDialog), findsNothing);
+}
+
 Future<void> setCompleted(WidgetTester tester) async {
   await tester.ensureVisible(find.byType(SwitchListTile));
   await tester.tap(find.byType(SwitchListTile));
@@ -57,6 +73,24 @@ Future<void> setCompleted(WidgetTester tester) async {
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  setUpAll(() async {
+    // Use the bundled fonts for responsive layout checks, as widget_test does.
+    for (final entry in {
+      'DM Sans': ['assets/fonts/dm_sans/DMSans-Variable.ttf'],
+      'Playfair Display': [
+        'assets/fonts/playfair_display/PlayfairDisplay-Variable.ttf',
+        'assets/fonts/playfair_display/PlayfairDisplay-Italic-Variable.ttf',
+      ],
+    }.entries) {
+      final loader = FontLoader(entry.key);
+      for (final asset in entry.value) {
+        loader.addFont(rootBundle.load(asset));
+      }
+      await loader.load();
+    }
+  });
+
   testWidgets('empty and whitespace-only required fields are rejected', (
     tester,
   ) async {
@@ -66,6 +100,7 @@ void main() {
     expect(find.text('Deskripsi wajib diisi.'), findsOneWidget);
     expect(find.text('Pilih kategori pengalaman.'), findsOneWidget);
     expect(field('save_status'), findsNothing);
+    expect(find.byType(ExperienceSummaryDialog), findsNothing);
     // Save scrolls back to the first invalid field on a phone.
     expect(field('title').hitTestable(), findsOneWidget);
 
@@ -75,6 +110,7 @@ void main() {
     expect(find.text('Judul wajib diisi.'), findsOneWidget);
     expect(find.text('Deskripsi wajib diisi.'), findsOneWidget);
     expect(field('save_status'), findsNothing);
+    expect(find.byType(ExperienceSummaryDialog), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
@@ -100,6 +136,7 @@ void main() {
         expect(find.text('Judul maksimal 255 karakter.'), findsOneWidget);
         expect(find.textContaining('Gunakan URL http://'), findsOneWidget);
         expect(field('save_status'), findsNothing);
+        expect(find.byType(ExperienceSummaryDialog), findsNothing);
       }
       expect(tester.takeException(), isNull);
     },
@@ -117,6 +154,7 @@ void main() {
         findsOneWidget,
       );
       expect(field('save_status'), findsNothing);
+      expect(find.byType(ExperienceSummaryDialog), findsNothing);
 
       await enter(tester, 'started_at', '2026-05-20 10:00');
       await setCompleted(tester);
@@ -132,6 +170,7 @@ void main() {
         findsOneWidget,
       );
       expect(field('save_status'), findsNothing);
+      expect(find.byType(ExperienceSummaryDialog), findsNothing);
       expect(tester.takeException(), isNull);
     },
   );
@@ -147,15 +186,49 @@ void main() {
           isFalse,
         );
         await save(tester);
+        expect(find.text('Ringkasan Experience'), findsOneWidget);
+        expectSummary(tester, 'title', 'Panitia kampus');
+        expectSummary(
+          tester,
+          'description',
+          'Menyelenggarakan kegiatan komunitas.',
+        );
+        expectSummary(tester, 'category', 'Community');
+        expectSummary(tester, 'thumbnail', 'Tidak diisi');
+        expectSummary(tester, 'started_at', 'Tidak diisi');
+        expectSummary(tester, 'is_ongoing', 'Ya');
+        expectSummary(tester, 'ended_at', 'Belum berakhir — masih berlangsung');
+        await closeSummary(tester);
         expect(
           find.textContaining('Data “Panitia kampus” valid'),
           findsOneWidget,
         );
-        expect(find.byType(Dialog), findsNothing);
+        expect(
+          tester.widget<TextFormField>(field('title')).controller!.text,
+          '  Panitia kampus  ',
+        );
+        expect(
+          tester.widget<TextFormField>(field('description')).controller!.text,
+          '  Menyelenggarakan kegiatan komunitas.  ',
+        );
+        expect(
+          tester
+              .state<FormFieldState<ExperienceCategory>>(field('category'))
+              .value,
+          ExperienceCategory.community,
+        );
+        expect(find.text('Community'), findsOneWidget);
+        expect(
+          tester.widget<SwitchListTile>(find.byType(SwitchListTile)).value,
+          isTrue,
+        );
         expect(tester.takeException(), isNull);
 
         await enter(tester, 'description', 'Keterangan diperbarui.');
         expect(field('save_status'), findsNothing);
+        await save(tester);
+        expectSummary(tester, 'description', 'Keterangan diperbarui.');
+        await closeSummary(tester);
       },
     );
   }
@@ -168,8 +241,29 @@ void main() {
       await enter(tester, 'thumbnail', '  https://example.com/photo.jpg  ');
       await enter(tester, 'started_at', '2026-05-20 10:00');
       await setCompleted(tester);
-      await enter(tester, 'ended_at', '2026-05-20 10:00');
+      await enter(tester, 'ended_at', '2026-06-21 17:35');
       await save(tester);
+      expectSummary(tester, 'thumbnail', 'https://example.com/photo.jpg');
+      expectSummary(tester, 'started_at', '2026-05-20 10:00 UTC');
+      expectSummary(tester, 'is_ongoing', 'Tidak');
+      expectSummary(tester, 'ended_at', '2026-06-21 17:35 UTC');
+      await closeSummary(tester);
+      expect(
+        tester.widget<TextFormField>(field('thumbnail')).controller!.text,
+        '  https://example.com/photo.jpg  ',
+      );
+      expect(
+        tester.widget<TextFormField>(field('started_at')).controller!.text,
+        '2026-05-20 10:00',
+      );
+      expect(
+        tester.widget<TextFormField>(field('ended_at')).controller!.text,
+        '2026-06-21 17:35',
+      );
+      expect(
+        tester.widget<SwitchListTile>(find.byType(SwitchListTile)).value,
+        isFalse,
+      );
       expect(field('save_status'), findsOneWidget);
 
       await setCompleted(tester);
@@ -180,6 +274,9 @@ void main() {
       expect(tester.widget<TextFormField>(field('ended_at')).enabled, isFalse);
       expect(field('save_status'), findsNothing);
       await save(tester);
+      expectSummary(tester, 'is_ongoing', 'Ya');
+      expectSummary(tester, 'ended_at', 'Belum berakhir — masih berlangsung');
+      await closeSummary(tester);
       expect(field('save_status'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
@@ -208,4 +305,49 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+
+  for (final width in [320.0, 390.0, 1280.0]) {
+    testWidgets('long summary scrolls while Close stays reachable at $width', (
+      tester,
+    ) async {
+      await openForm(tester, width: width, height: width < 600 ? 640 : 900);
+      if (width == 320) {
+        tester.platformDispatcher.textScaleFactorTestValue = 1.4;
+        addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+        await tester.pumpAndSettle();
+      }
+      await fillRequired(tester);
+      final description = List.generate(
+        60,
+        (index) =>
+            'Paragraf $index: Mengatur kegiatan, berkolaborasi dengan tim, '
+            'dan mempelajari hal baru dalam pengalaman ini.',
+      ).join('\n\n');
+      await enter(tester, 'description', description);
+      await save(tester);
+      expectSummary(tester, 'description', description);
+      expect(find.text('Tutup').hitTestable(), findsOneWidget);
+      expect(tester.takeException(), isNull);
+
+      final scrollable = find.descendant(
+        of: field('summary_scroll'),
+        matching: find.byType(Scrollable),
+      );
+      await tester.scrollUntilVisible(
+        field('summary_ended_at'),
+        600,
+        scrollable: scrollable,
+        maxScrolls: 100,
+      );
+      await tester.pumpAndSettle();
+      expect(field('summary_ended_at').hitTestable(), findsOneWidget);
+      expect(find.text('Tutup').hitTestable(), findsOneWidget);
+      await closeSummary(tester);
+      expect(
+        tester.widget<TextFormField>(field('description')).controller!.text,
+        description,
+      );
+      expect(tester.takeException(), isNull);
+    });
+  }
 }
