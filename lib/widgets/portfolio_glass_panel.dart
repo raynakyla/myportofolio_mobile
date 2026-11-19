@@ -20,14 +20,19 @@ class PortfolioGlassPanel extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xE0FFFDFE), Color(0xCCFFF0F7), Color(0xA6F5D1E5)],
-          stops: [0, 0.5, 1],
+          colors: [Color(0xFAFFFEFF), Color(0xDEFFF2F8), Color(0xD9F3DCE8)],
+          stops: [0, 0.55, 1],
         ),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x1C89536C),
-            blurRadius: 42,
-            offset: Offset(0, 16),
+            color: Color(0x1889536C),
+            blurRadius: 32,
+            offset: Offset(0, 12),
+          ),
+          BoxShadow(
+            color: Color(0x0D89536C),
+            blurRadius: 4,
+            offset: Offset(0, 2),
           ),
         ],
       ),
@@ -35,13 +40,13 @@ class PortfolioGlassPanel extends StatelessWidget {
         width: double.infinity,
         padding: padding,
         decoration: BoxDecoration(
-          border: Border.all(color: const Color(0xF2FFFFFF)),
+          border: Border.all(color: const Color(0xF2FFFFFF), width: 1.2),
           borderRadius: borderRadius,
           gradient: const RadialGradient(
-            center: Alignment(0.78, -0.9),
-            radius: 1.05,
-            colors: [Color(0xF5FFFFFF), Color(0x70FFF9FD), Color(0x00FFF9FD)],
-            stops: [0, 0.40, 1],
+            center: Alignment(-0.65, -1),
+            radius: 1.4,
+            colors: [Color(0xBFFFFFFF), Color(0x35FFF9FD), Color(0x00FFF9FD)],
+            stops: [0, 0.5, 1],
           ),
         ),
         child: child,

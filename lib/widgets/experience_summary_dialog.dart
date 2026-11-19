@@ -3,6 +3,7 @@ import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
 import 'package:myportofolio_mobile/models/experience_data.dart';
 import 'package:myportofolio_mobile/theme/portfolio_colors.dart';
+import 'package:myportofolio_mobile/widgets/portfolio_glass_button.dart';
 import 'package:myportofolio_mobile/widgets/portfolio_glass_panel.dart';
 
 class ExperienceSummaryDialog extends StatelessWidget {
@@ -83,10 +84,11 @@ class ExperienceSummaryDialog extends StatelessWidget {
                     ],
                   ),
                 ),
+                const Divider(height: 1, color: PortfolioColors.line),
                 Flexible(
                   child: SingleChildScrollView(
                     key: const ValueKey('summary_scroll'),
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -141,25 +143,18 @@ class ExperienceSummaryDialog extends StatelessWidget {
                     ),
                   ),
                 ),
-                Padding(
+                Container(
                   padding: const EdgeInsets.all(16),
-                  child: FilledButton(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: PortfolioColors.pink,
-                      foregroundColor: PortfolioColors.ink,
-                      minimumSize: const Size(double.infinity, 52),
-                      textStyle: const TextStyle(
-                        fontFamily: 'DM Sans',
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        side: const BorderSide(color: PortfolioColors.mauve),
-                      ),
+                  decoration: const BoxDecoration(
+                    color: Color(0xEFFFF9F3),
+                    border: Border(
+                      top: BorderSide(color: PortfolioColors.line),
                     ),
+                  ),
+                  child: PortfolioGlassButton(
+                    label: 'Tutup',
+                    icon: Icons.close_rounded,
                     onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Tutup'),
                   ),
                 ),
               ],

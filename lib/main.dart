@@ -17,6 +17,7 @@ class MyApp extends StatelessWidget {
           secondary: PortfolioColors.yellow,
           surface: PortfolioColors.cream,
           onSurface: PortfolioColors.ink,
+          error: PortfolioColors.error,
         );
 
     return MaterialApp(
@@ -26,13 +27,50 @@ class MyApp extends StatelessWidget {
         fontFamily: 'DM Sans',
         colorScheme: colorScheme,
         scaffoldBackgroundColor: PortfolioColors.cream,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: PortfolioColors.cream,
+          foregroundColor: PortfolioColors.roseInk,
+          surfaceTintColor: Colors.transparent,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+        ),
+        iconButtonTheme: IconButtonThemeData(
+          style: ButtonStyle(
+            minimumSize: const WidgetStatePropertyAll(Size(48, 48)),
+            overlayColor: WidgetStateProperty.resolveWith((states) {
+              return PortfolioColors.roseInk.withValues(
+                alpha: states.contains(WidgetState.pressed) ? 0.18 : 0.09,
+              );
+            }),
+          ),
+        ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
           fillColor: const Color(0xE6FFFCFA),
           floatingLabelBehavior: FloatingLabelBehavior.always,
-          labelStyle: const TextStyle(color: PortfolioColors.ink),
-          helperMaxLines: 3,
-          errorMaxLines: 3,
+          labelStyle: const TextStyle(
+            color: PortfolioColors.ink,
+            fontWeight: FontWeight.w600,
+          ),
+          floatingLabelStyle: const TextStyle(
+            color: PortfolioColors.roseInk,
+            fontWeight: FontWeight.w600,
+          ),
+          hintStyle: const TextStyle(
+            color: PortfolioColors.muted,
+            fontSize: 14,
+          ),
+          helperStyle: const TextStyle(
+            color: PortfolioColors.muted,
+            height: 1.5,
+          ),
+          errorStyle: const TextStyle(
+            color: PortfolioColors.error,
+            fontSize: 13,
+            height: 1.4,
+          ),
+          helperMaxLines: 8,
+          errorMaxLines: 8,
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 16,
             vertical: 18,
@@ -40,14 +78,29 @@ class MyApp extends StatelessWidget {
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: Color(0x669D5F78)),
+            borderSide: const BorderSide(color: PortfolioColors.line),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
             borderSide: const BorderSide(
-              color: PortfolioColors.mauve,
+              color: PortfolioColors.roseInk,
               width: 2,
             ),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: const BorderSide(color: PortfolioColors.error),
+          ),
+          focusedErrorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: const BorderSide(
+              color: PortfolioColors.error,
+              width: 2,
+            ),
+          ),
+          disabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: const BorderSide(color: PortfolioColors.line),
           ),
         ),
       ),

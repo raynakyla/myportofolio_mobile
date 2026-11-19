@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:myportofolio_mobile/screens/experience_form_page.dart';
 import 'package:myportofolio_mobile/theme/portfolio_colors.dart';
+import 'package:myportofolio_mobile/widgets/portfolio_background.dart';
 import 'package:myportofolio_mobile/widgets/portfolio_drawer.dart';
 import 'package:myportofolio_mobile/widgets/portfolio_glass_panel.dart';
 
@@ -39,8 +40,8 @@ class MyHomePage extends StatelessWidget {
     ItemHomepage(
       'Tambah Experience',
       Icons.add_circle_rounded,
-      PortfolioColors.yellow,
-      Color(0xFF765621),
+      PortfolioColors.pink,
+      PortfolioColors.roseInk,
     ),
     ItemHomepage(
       'Logout',
@@ -54,6 +55,7 @@ class MyHomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final isNarrow = MediaQuery.sizeOf(context).width < _compactWidth;
     final horizontalPadding = isNarrow ? 16.0 : 28.0;
+    final textScale = MediaQuery.textScalerOf(context).scale(16) / 16;
 
     return Scaffold(
       drawer: PortfolioDrawer(
@@ -62,7 +64,7 @@ class MyHomePage extends StatelessWidget {
       ),
       appBar: AppBar(
         leading: const DrawerButton(color: PortfolioColors.mauve),
-        toolbarHeight: isNarrow ? 72 : 88,
+        toolbarHeight: isNarrow ? (textScale > 1.5 ? 116 : 80) : 88,
         titleSpacing: horizontalPadding,
         backgroundColor: PortfolioColors.cream,
         surfaceTintColor: Colors.transparent,
@@ -71,8 +73,8 @@ class MyHomePage extends StatelessWidget {
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: _maxContentWidth),
             child: Container(
-              height: isNarrow ? 48 : 58,
-              padding: const EdgeInsets.symmetric(horizontal: 18),
+              constraints: BoxConstraints(minHeight: isNarrow ? 52 : 58),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: Colors.white.withValues(alpha: 0.78)),
@@ -90,8 +92,11 @@ class MyHomePage extends StatelessWidget {
                   ),
                 ],
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              child: Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 12,
+                runSpacing: 4,
                 children: [
                   const Text(
                     'Rayna.',
@@ -119,147 +124,84 @@ class MyHomePage extends StatelessWidget {
           ),
         ),
       ),
-      body: Stack(
-        children: [
-          const Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    PortfolioColors.cream,
-                    Color(0xFFFFF5F8),
-                    Color(0xFFFDF7FB),
-                  ],
-                  stops: [0, 0.46, 1],
-                ),
+      body: PortfolioBackground(
+        child: SafeArea(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                horizontalPadding,
+                isNarrow ? 16 : 24,
+                horizontalPadding,
+                isNarrow ? 32 : 52,
               ),
-            ),
-          ),
-          const Positioned(
-            top: -160,
-            left: -125,
-            child: _PastelOrb(color: PortfolioColors.yellow, size: 370),
-          ),
-          const Positioned(
-            top: 60,
-            right: -160,
-            child: _PastelOrb(color: PortfolioColors.pink, size: 430),
-          ),
-          const Positioned(
-            bottom: -180,
-            left: 80,
-            child: _PastelOrb(color: PortfolioColors.lavender, size: 390),
-          ),
-          SafeArea(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  horizontalPadding,
-                  isNarrow ? 16 : 24,
-                  horizontalPadding,
-                  isNarrow ? 32 : 52,
-                ),
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(
-                      maxWidth: _maxContentWidth,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const _HeroCard(),
-                        SizedBox(height: isNarrow ? 22 : 42),
-                        const Text(
-                          'EXPLORE',
-                          style: TextStyle(
-                            color: PortfolioColors.muted,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 2.2,
-                          ),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: _maxContentWidth),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const _HeroCard(),
+                      SizedBox(height: isNarrow ? 22 : 42),
+                      const Text(
+                        'EXPLORE',
+                        style: TextStyle(
+                          color: PortfolioColors.muted,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 2.2,
                         ),
-                        SizedBox(height: isNarrow ? 4 : 8),
-                        Text(
-                          'Where to next?',
-                          style: TextStyle(
-                            fontFamily: 'Playfair Display',
-                            color: PortfolioColors.ink,
-                            fontSize: isNarrow ? 26 : 30,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: -0.3,
-                            height: 1.2,
-                          ),
+                      ),
+                      SizedBox(height: isNarrow ? 4 : 8),
+                      Text(
+                        'Where to next?',
+                        style: TextStyle(
+                          fontFamily: 'Playfair Display',
+                          color: PortfolioColors.ink,
+                          fontSize: isNarrow ? 26 : 30,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: -0.3,
+                          height: 1.2,
                         ),
-                        SizedBox(height: isNarrow ? 12 : 20),
-                        LayoutBuilder(
-                          builder: (context, constraints) {
-                            final width = constraints.maxWidth;
-                            final columns = width >= 800
-                                ? 3
-                                : width >= 570
-                                ? 2
-                                : 1;
-                            final gap = isNarrow ? 10.0 : 14.0;
-                            final tileWidth =
-                                (width - (columns - 1) * gap) / columns;
-                            final minHeight = isNarrow
-                                ? 76.0
-                                : columns == 3
-                                ? 142.0
-                                : 108.0;
+                      ),
+                      SizedBox(height: isNarrow ? 12 : 20),
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final width = constraints.maxWidth;
+                          final columns = width >= 800
+                              ? 3
+                              : width >= 570
+                              ? 2
+                              : 1;
+                          final gap = isNarrow ? 10.0 : 14.0;
+                          final tileWidth =
+                              (width - (columns - 1) * gap) / columns;
+                          final minHeight = isNarrow
+                              ? 76.0
+                              : columns == 3
+                              ? 142.0
+                              : 108.0;
 
-                            return Wrap(
-                              spacing: gap,
-                              runSpacing: gap,
-                              children: [
-                                for (final item in items)
-                                  ConstrainedBox(
-                                    constraints: BoxConstraints(
-                                      minWidth: tileWidth,
-                                      maxWidth: tileWidth,
-                                      minHeight: minHeight,
-                                    ),
-                                    child: ItemCard(item: item),
+                          return Wrap(
+                            spacing: gap,
+                            runSpacing: gap,
+                            children: [
+                              for (final item in items)
+                                ConstrainedBox(
+                                  constraints: BoxConstraints(
+                                    minWidth: tileWidth,
+                                    maxWidth: tileWidth,
+                                    minHeight: minHeight,
                                   ),
-                              ],
-                            );
-                          },
-                        ),
-                      ],
-                    ),
+                                  child: ItemCard(item: item),
+                                ),
+                            ],
+                          );
+                        },
+                      ),
+                    ],
                   ),
                 ),
               ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PastelOrb extends StatelessWidget {
-  const _PastelOrb({required this.color, required this.size});
-
-  final Color color;
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    return IgnorePointer(
-      child: SizedBox(
-        width: size,
-        height: size,
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: RadialGradient(
-              colors: [
-                color.withValues(alpha: 0.48),
-                color.withValues(alpha: 0),
-              ],
             ),
           ),
         ),
@@ -497,8 +439,7 @@ class ItemCard extends StatelessWidget {
           shape: WidgetStatePropertyAll(
             RoundedRectangleBorder(borderRadius: radius),
           ),
-          animationDuration: Duration.zero,
-          splashFactory: NoSplash.splashFactory,
+          animationDuration: const Duration(milliseconds: 160),
           side: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.focused)) {
               return BorderSide(color: item.accentInk, width: 2);

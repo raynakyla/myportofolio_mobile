@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:myportofolio_mobile/main.dart';
@@ -307,12 +309,40 @@ void main() {
   );
 
   for (final width in [320.0, 390.0, 1280.0]) {
+    testWidgets(
+      'form errors remain readable at 200 percent text and width $width',
+      (tester) async {
+        tester.platformDispatcher.textScaleFactorTestValue = 2;
+        addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+        await openForm(tester, width: width);
+        await enter(tester, 'thumbnail', 'bukan-url');
+        await save(tester);
+        for (final message in [
+          'Judul wajib diisi.',
+          'Deskripsi wajib diisi.',
+          'Pilih kategori pengalaman.',
+          'Gunakan URL http:// atau https:// yang valid (maks. 200 karakter).',
+        ]) {
+          final error = find.text(message);
+          expect(error, findsOneWidget);
+          await tester.ensureVisible(error);
+          expect(error.hitTestable(), findsOneWidget);
+          expect(
+            tester.renderObject<RenderParagraph>(error).didExceedMaxLines,
+            isFalse,
+          );
+        }
+        expect(find.byType(ExperienceSummaryDialog), findsNothing);
+        expect(tester.takeException(), isNull);
+      },
+    );
+
     testWidgets('long summary scrolls while Close stays reachable at $width', (
       tester,
     ) async {
       await openForm(tester, width: width, height: width < 600 ? 640 : 900);
       if (width == 320) {
-        tester.platformDispatcher.textScaleFactorTestValue = 1.4;
+        tester.platformDispatcher.textScaleFactorTestValue = 2;
         addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
         await tester.pumpAndSettle();
       }
@@ -350,4 +380,34 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+
+  testWidgets(
+    'Save supports keyboard focus and only submits a mouse press on release',
+    (tester) async {
+      await openForm(tester, width: 1280);
+      await fillRequired(tester);
+      await tester.ensureVisible(find.text('Save'));
+      Focus.of(tester.element(find.text('Save'))).requestFocus();
+      await tester.pumpAndSettle();
+      expect(Focus.of(tester.element(find.text('Save'))).hasFocus, isTrue);
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+      expect(find.byType(ExperienceSummaryDialog), findsOneWidget);
+      await closeSummary(tester);
+
+      final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      addTearDown(mouse.removePointer);
+      await mouse.addPointer();
+      await mouse.moveTo(tester.getCenter(find.text('Save')));
+      await tester.pumpAndSettle();
+      await mouse.down(tester.getCenter(find.text('Save')));
+      await tester.pump(const Duration(milliseconds: 150));
+      expect(find.byType(ExperienceSummaryDialog), findsNothing);
+      await mouse.up();
+      await tester.pumpAndSettle();
+      expect(find.byType(ExperienceSummaryDialog), findsOneWidget);
+      await closeSummary(tester);
+      expect(tester.takeException(), isNull);
+    },
+  );
 }

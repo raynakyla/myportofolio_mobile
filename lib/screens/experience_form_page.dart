@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:myportofolio_mobile/models/experience_data.dart';
 import 'package:myportofolio_mobile/theme/portfolio_colors.dart';
 import 'package:myportofolio_mobile/widgets/experience_summary_dialog.dart';
+import 'package:myportofolio_mobile/widgets/portfolio_background.dart';
 import 'package:myportofolio_mobile/widgets/portfolio_drawer.dart';
+import 'package:myportofolio_mobile/widgets/portfolio_glass_button.dart';
 import 'package:myportofolio_mobile/widgets/portfolio_glass_panel.dart';
 
 class ExperienceFormPage extends StatefulWidget {
@@ -177,16 +179,19 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
       key: ValueKey(isEnd ? 'ended_at' : 'started_at'),
       controller: controller,
       enabled: enabled,
+      style: TextStyle(
+        color: enabled ? PortfolioColors.ink : PortfolioColors.muted,
+      ),
       keyboardType: TextInputType.datetime,
       textInputAction: TextInputAction.next,
       decoration: InputDecoration(
-        labelText: isEnd
-            ? 'Tanggal akhir (UTC)'
-            : 'Tanggal mulai (UTC, opsional)',
+        labelText: isEnd ? 'Tanggal akhir · UTC' : 'Tanggal mulai · UTC',
         hintText: 'YYYY-MM-DD HH:mm',
         helperText: isEnd && _isOngoing
             ? 'Tidak diperlukan untuk pengalaman yang masih berlangsung.'
-            : 'YYYY-MM-DD HH:mm · gunakan waktu UTC.',
+            : isEnd
+            ? 'YYYY-MM-DD HH:mm · gunakan waktu UTC.'
+            : 'Opsional · YYYY-MM-DD HH:mm · waktu UTC.',
         suffixIcon: IconButton(
           tooltip: isEnd ? 'Pilih tanggal akhir' : 'Pilih tanggal mulai',
           onPressed: enabled ? () => _pickDateTime(controller) : null,
@@ -225,14 +230,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
         foregroundColor: PortfolioColors.mauve,
         elevation: 0,
       ),
-      body: DecoratedBox(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [PortfolioColors.cream, Color(0xFFFFF5F8)],
-          ),
-        ),
+      body: PortfolioBackground(
         child: SizedBox.expand(
           child: SafeArea(
             child: SingleChildScrollView(
@@ -247,7 +245,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 720),
                   child: PortfolioGlassPanel(
-                    padding: EdgeInsets.all(isNarrow ? 24 : 40),
+                    padding: EdgeInsets.all(isNarrow ? 20 : 40),
                     borderRadius: BorderRadius.circular(isNarrow ? 25 : 32),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -296,6 +294,8 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
+                              const _FormSectionTitle('Detail pengalaman'),
+                              const SizedBox(height: 20),
                               TextFormField(
                                 key: const ValueKey('title'),
                                 controller: _titleController,
@@ -365,13 +365,16 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                                 textInputAction: TextInputAction.next,
                                 autocorrect: false,
                                 decoration: const InputDecoration(
-                                  labelText: 'URL thumbnail (opsional)',
+                                  labelText: 'URL thumbnail',
+                                  helperText: 'Opsional · tautan http:// atau https://.',
                                   hintText:
                                       'https://example.com/experience.jpg',
                                 ),
                                 validator: _validateThumbnail,
                               ),
                               const SizedBox(height: 24),
+                              const _FormSectionTitle('Waktu & status'),
+                              const SizedBox(height: 20),
                               _dateField(isEnd: false),
                               const SizedBox(height: 16),
                               SwitchListTile.adaptive(
@@ -392,40 +395,10 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                               const SizedBox(height: 16),
                               _dateField(isEnd: true),
                               const SizedBox(height: 32),
-                              DecoratedBox(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(18),
-                                  gradient: const LinearGradient(
-                                    colors: [
-                                      PortfolioColors.pink,
-                                      PortfolioColors.yellow,
-                                    ],
-                                  ),
-                                ),
-                                child: FilledButton.icon(
-                                  style: FilledButton.styleFrom(
-                                    backgroundColor: Colors.transparent,
-                                    foregroundColor: PortfolioColors.ink,
-                                    minimumSize: const Size(
-                                      double.infinity,
-                                      56,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(18),
-                                      side: const BorderSide(
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    textStyle: const TextStyle(
-                                      fontFamily: 'DM Sans',
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                  onPressed: _save,
-                                  icon: const Icon(Icons.check_rounded),
-                                  label: const Text('Save'),
-                                ),
+                              PortfolioGlassButton(
+                                label: 'Save',
+                                icon: Icons.check_rounded,
+                                onPressed: _save,
                               ),
                               if (_savedExperience != null) ...[
                                 const SizedBox(height: 16),
@@ -453,6 +426,25 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _FormSectionTitle extends StatelessWidget {
+  const _FormSectionTitle(this.title);
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      title,
+      style: const TextStyle(
+        fontFamily: 'Playfair Display',
+        fontSize: 22,
+        fontWeight: FontWeight.w600,
+        color: PortfolioColors.roseInk,
       ),
     );
   }

@@ -8,4 +8,7 @@ class PortfolioColors {
   static const ink = Color(0xFF2F2A2D);
   static const muted = Color(0xFF746C70);
   static const mauve = Color(0xFF9D5F78);
+  static const roseInk = Color(0xFF653D50);
+  static const line = Color(0xFFE6CED8);
+  static const error = Color(0xFF96354C);
 }

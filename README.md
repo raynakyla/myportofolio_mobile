@@ -92,7 +92,7 @@ flutter analyze
 flutter test
 ```
 
-Seluruh 17 tes memeriksa Home, SnackBar, navigasi berulang lewat drawer,
+Seluruh 23 tes memeriksa Home, SnackBar, navigasi berulang lewat drawer,
 Back, validasi form, isi ringkasan, dan retensi isian setelah dialog ditutup.
 Pemeriksaan layout mencakup lebar 320, 390, dan 1280 px, deskripsi panjang,
 teks diperbesar, serta inset keyboard. Preview Chrome melengkapi tes untuk

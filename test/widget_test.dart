@@ -69,6 +69,37 @@ void main() {
     expect(find.text('Logout'), findsOneWidget);
   });
 
+  for (final width in [320.0, 390.0]) {
+    testWidgets('Home and drawer fit 200 percent text at $width', (
+      tester,
+    ) async {
+      tester.view.physicalSize = Size(width, 740);
+      tester.view.devicePixelRatio = 1;
+      tester.platformDispatcher.textScaleFactorTestValue = 2;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      await tester.pumpWidget(const MyApp());
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      await tester.ensureVisible(find.text('Tambah Experience'));
+      expect(find.text('Tambah Experience').hitTestable(), findsOneWidget);
+
+      await tester.tap(find.byType(DrawerButton));
+      await tester.pumpAndSettle();
+      final homeTile = find.widgetWithText(ListTile, 'Home');
+      final formTile = find.widgetWithText(ListTile, 'Tambah Experience');
+      expect(tester.widget<ListTile>(homeTile).selected, isTrue);
+      await tester.ensureVisible(formTile);
+      expect(tester.getSize(formTile).height, greaterThanOrEqualTo(64));
+      expect(tester.takeException(), isNull);
+      await tester.tap(formTile);
+      await tester.pumpAndSettle();
+      expect(find.byType(ExperienceFormPage), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
   for (final width in [390.0, 1280.0]) {
     testWidgets('drawer reuses Home and keeps Back predictable at $width', (
       tester,

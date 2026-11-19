@@ -143,41 +143,65 @@ class _DestinationTile extends StatelessWidget {
         borderRadius: radius,
         gradient: selected
             ? const LinearGradient(
-                colors: [PortfolioColors.pink, Color(0xFFFCE7EE)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFFFFF8FC),
+                  PortfolioColors.pink,
+                  Color(0xFFF7E4ED),
+                ],
+                stops: [0, 0.55, 1],
               )
             : null,
         border: Border.all(
-          color: selected ? PortfolioColors.mauve : const Color(0x30746C70),
+          color: selected ? PortfolioColors.mauve : PortfolioColors.line,
         ),
-      ),
-      child: ListTile(
-        selected: selected,
-        minTileHeight: 64,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-        shape: RoundedRectangleBorder(borderRadius: radius),
-        textColor: PortfolioColors.ink,
-        iconColor: PortfolioColors.ink,
-        selectedColor: PortfolioColors.ink,
-        focusColor: PortfolioColors.mauve.withValues(alpha: 0.18),
-        hoverColor: PortfolioColors.mauve.withValues(alpha: 0.10),
-        leading: Icon(destination.icon),
-        title: Text(
-          destination.label,
-          style: const TextStyle(fontWeight: FontWeight.w700, height: 1.4),
-        ),
-        trailing: selected
-            ? const DecoratedBox(
-                decoration: BoxDecoration(
-                  color: PortfolioColors.yellow,
-                  shape: BoxShape.circle,
+        boxShadow: selected
+            ? const [
+                BoxShadow(
+                  color: Color(0x1689536C),
+                  blurRadius: 16,
+                  offset: Offset(0, 5),
                 ),
-                child: Padding(
-                  padding: EdgeInsets.all(4),
-                  child: Icon(Icons.check_rounded, size: 18),
-                ),
-              )
+              ]
             : null,
-        onTap: onTap,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: radius),
+        clipBehavior: Clip.antiAlias,
+        child: ListTile(
+          selected: selected,
+          minTileHeight: 64,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 4,
+          ),
+          shape: RoundedRectangleBorder(borderRadius: radius),
+          textColor: PortfolioColors.ink,
+          iconColor: PortfolioColors.ink,
+          selectedColor: PortfolioColors.roseInk,
+          focusColor: PortfolioColors.roseInk.withValues(alpha: 0.18),
+          hoverColor: PortfolioColors.roseInk.withValues(alpha: 0.10),
+          leading: Icon(destination.icon),
+          title: Text(
+            destination.label,
+            style: const TextStyle(fontWeight: FontWeight.w700, height: 1.4),
+          ),
+          trailing: selected
+              ? const DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: PortfolioColors.yellow,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.all(4),
+                    child: Icon(Icons.check_rounded, size: 18),
+                  ),
+                )
+              : null,
+          onTap: onTap,
+        ),
       ),
     );
   }
