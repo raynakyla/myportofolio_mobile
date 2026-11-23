@@ -46,6 +46,25 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
     }
   }
 
+  void _onFormChanged() {
+    _markDirty();
+    if (_attemptedSave) _formKey.currentState!.validate();
+  }
+
+  void _setOngoing(bool value) {
+    final clearEnd = value && _endController.text.isNotEmpty;
+    setState(() {
+      _isOngoing = value;
+      _savedExperience = null;
+    });
+    if (clearEnd) {
+      // Clearing the controller triggers onChanged, including revalidation.
+      _endController.clear();
+    } else {
+      _onFormChanged();
+    }
+  }
+
   String? _requiredText(String? value, String label) {
     return value == null || value.trim().isEmpty ? '$label wajib diisi.' : null;
   }
@@ -144,10 +163,14 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
       _attemptedSave = true;
       _savedExperience = null;
     });
-    final invalidFields = _formKey.currentState!.validateGranularly();
-    if (invalidFields.isNotEmpty) {
+    final form = _formKey.currentState!;
+    if (!form.validate()) {
+      // Read the errors from this validation pass without validating again.
+      final firstInvalidField = form.fields.firstWhere(
+        (field) => field.hasError,
+      );
       Scrollable.ensureVisible(
-        invalidFields.first.context,
+        firstInvalidField.context,
         alignment: 0.15,
         duration: const Duration(milliseconds: 250),
       );
@@ -283,10 +306,8 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                         const SizedBox(height: 32),
                         Form(
                           key: _formKey,
-                          onChanged: _markDirty,
-                          autovalidateMode: _attemptedSave
-                              ? AutovalidateMode.onUserInteraction
-                              : AutovalidateMode.disabled,
+                          // Revalidate on edits after Save, not on every rebuild.
+                          onChanged: _onFormChanged,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
@@ -380,13 +401,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                                   'Aktifkan jika belum ada tanggal akhir.',
                                 ),
                                 value: _isOngoing,
-                                onChanged: (value) {
-                                  setState(() {
-                                    _isOngoing = value;
-                                    _savedExperience = null;
-                                    if (value) _endController.clear();
-                                  });
-                                },
+                                onChanged: _setOngoing,
                               ),
                               const SizedBox(height: 16),
                               _dateField(isEnd: true),

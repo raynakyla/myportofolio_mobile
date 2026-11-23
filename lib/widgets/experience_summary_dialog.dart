@@ -1,5 +1,3 @@
-import 'dart:ui' show ImageFilter;
-
 import 'package:flutter/material.dart';
 import 'package:myportofolio_mobile/models/experience_data.dart';
 import 'package:myportofolio_mobile/theme/portfolio_colors.dart';
@@ -22,146 +20,120 @@ class ExperienceSummaryDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final radius = BorderRadius.circular(28);
-    return Dialog(
+    return AlertDialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       constraints: const BoxConstraints(maxWidth: 640, maxHeight: 720),
-      backgroundColor: Colors.transparent,
+      backgroundColor: PortfolioColors.cream,
       surfaceTintColor: Colors.transparent,
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: radius),
       clipBehavior: Clip.antiAlias,
-      // The blur is clipped to this panel, not the entire screen.
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
-        child: ColoredBox(
-          color: PortfolioColors.cream.withValues(alpha: 0.94),
+      titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+      title: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: PortfolioColors.yellow,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Text(
+              'PREVIEW LOKAL',
+              style: TextStyle(
+                color: PortfolioColors.ink,
+                fontWeight: FontWeight.w700,
+                fontSize: 10,
+                letterSpacing: 1.2,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Semantics(
+            namesRoute: true,
+            header: true,
+            child: const Text(
+              'Ringkasan Experience',
+              style: TextStyle(
+                fontFamily: 'Playfair Display',
+                color: PortfolioColors.ink,
+                fontSize: 26,
+                fontWeight: FontWeight.w600,
+                height: 1.2,
+              ),
+            ),
+          ),
+        ],
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+      content: SizedBox(
+        width: 592,
+        child: SingleChildScrollView(
+          key: const ValueKey('summary_scroll'),
           child: PortfolioGlassPanel(
-            padding: EdgeInsets.zero,
-            borderRadius: radius,
+            padding: const EdgeInsets.all(24),
+            borderRadius: BorderRadius.circular(20),
             child: Column(
-              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: PortfolioColors.yellow,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Text(
-                          'PREVIEW LOKAL',
-                          style: TextStyle(
-                            color: PortfolioColors.ink,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 10,
-                            letterSpacing: 1.2,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Semantics(
-                        namesRoute: true,
-                        header: true,
-                        child: const Text(
-                          'Ringkasan Experience',
-                          style: TextStyle(
-                            fontFamily: 'Playfair Display',
-                            color: PortfolioColors.ink,
-                            fontSize: 26,
-                            fontWeight: FontWeight.w600,
-                            height: 1.2,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                const Text(
+                  'Periksa kembali isianmu. Data ini belum dikirim ke server.',
+                  style: TextStyle(color: PortfolioColors.muted, height: 1.5),
                 ),
-                const Divider(height: 1, color: PortfolioColors.line),
-                Flexible(
-                  child: SingleChildScrollView(
-                    key: const ValueKey('summary_scroll'),
-                    padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const Text(
-                          'Periksa kembali isianmu. Data ini belum dikirim ke server.',
-                          style: TextStyle(
-                            color: PortfolioColors.muted,
-                            height: 1.5,
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        _SummaryField(
-                          name: 'title',
-                          label: 'Judul',
-                          value: experience.title,
-                        ),
-                        _SummaryField(
-                          name: 'description',
-                          label: 'Deskripsi',
-                          value: experience.description,
-                        ),
-                        _SummaryField(
-                          name: 'category',
-                          label: 'Kategori',
-                          value: experience.category.label,
-                        ),
-                        _SummaryField(
-                          name: 'thumbnail',
-                          label: 'URL thumbnail',
-                          value: experience.thumbnail ?? 'Tidak diisi',
-                        ),
-                        _SummaryField(
-                          name: 'started_at',
-                          label: 'Tanggal mulai',
-                          value: experience.startedAt == null
-                              ? 'Tidak diisi'
-                              : _formatUtc(experience.startedAt!),
-                        ),
-                        _SummaryField(
-                          name: 'is_ongoing',
-                          label: 'Masih berlangsung',
-                          value: experience.isOngoing ? 'Ya' : 'Tidak',
-                        ),
-                        _SummaryField(
-                          name: 'ended_at',
-                          label: 'Tanggal akhir',
-                          value: experience.endedAt == null
-                              ? 'Belum berakhir — masih berlangsung'
-                              : _formatUtc(experience.endedAt!),
-                        ),
-                      ],
-                    ),
-                  ),
+                const SizedBox(height: 24),
+                _SummaryField(
+                  name: 'title',
+                  label: 'Judul',
+                  value: experience.title,
                 ),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: const BoxDecoration(
-                    color: Color(0xEFFFF9F3),
-                    border: Border(
-                      top: BorderSide(color: PortfolioColors.line),
-                    ),
-                  ),
-                  child: PortfolioGlassButton(
-                    label: 'Tutup',
-                    icon: Icons.close_rounded,
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
+                _SummaryField(
+                  name: 'description',
+                  label: 'Deskripsi',
+                  value: experience.description,
+                ),
+                _SummaryField(
+                  name: 'category',
+                  label: 'Kategori',
+                  value: experience.category.label,
+                ),
+                _SummaryField(
+                  name: 'thumbnail',
+                  label: 'URL thumbnail',
+                  value: experience.thumbnail ?? 'Tidak diisi',
+                ),
+                _SummaryField(
+                  name: 'started_at',
+                  label: 'Tanggal mulai',
+                  value: experience.startedAt == null
+                      ? 'Tidak diisi'
+                      : _formatUtc(experience.startedAt!),
+                ),
+                _SummaryField(
+                  name: 'is_ongoing',
+                  label: 'Masih berlangsung',
+                  value: experience.isOngoing ? 'Ya' : 'Tidak',
+                ),
+                _SummaryField(
+                  name: 'ended_at',
+                  label: 'Tanggal akhir',
+                  value: experience.endedAt == null
+                      ? 'Belum berakhir — masih berlangsung'
+                      : _formatUtc(experience.endedAt!),
                 ),
               ],
             ),
           ),
         ),
       ),
+      actionsPadding: const EdgeInsets.all(16),
+      actions: [
+        PortfolioGlassButton(
+          label: 'Tutup',
+          icon: Icons.close_rounded,
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ],
     );
   }
 }

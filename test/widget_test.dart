@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:myportofolio_mobile/main.dart';
 import 'package:myportofolio_mobile/screens/experience_form_page.dart';
 import 'package:myportofolio_mobile/screens/home_page.dart';
+import 'package:myportofolio_mobile/widgets/portfolio_action_card.dart';
 import 'package:myportofolio_mobile/widgets/portfolio_drawer.dart';
 
 void main() {
@@ -35,6 +36,7 @@ void main() {
     expect(find.text('Tambah Experience'), findsOneWidget);
     expect(find.text('Tambah Project'), findsOneWidget);
     expect(find.text('Logout'), findsOneWidget);
+    expect(find.byType(ItemCard), findsNWidgets(4));
     expect(tester.takeException(), isNull);
   });
 

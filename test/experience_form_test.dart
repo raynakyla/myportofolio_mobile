@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:myportofolio_mobile/main.dart';
 import 'package:myportofolio_mobile/models/experience_data.dart';
+import 'package:myportofolio_mobile/screens/experience_form_page.dart';
 import 'package:myportofolio_mobile/widgets/experience_summary_dialog.dart';
 
 Finder field(String name) => find.byKey(ValueKey(name));
@@ -63,9 +64,13 @@ void expectSummary(WidgetTester tester, String name, String value) {
 }
 
 Future<void> closeSummary(WidgetTester tester) async {
+  expect(find.byType(AlertDialog), findsOneWidget);
+  final form = tester.element(find.byType(ExperienceFormPage));
   await tester.tap(find.widgetWithText(FilledButton, 'Tutup'));
   await tester.pumpAndSettle();
+  expect(find.byType(AlertDialog), findsNothing);
   expect(find.byType(ExperienceSummaryDialog), findsNothing);
+  expect(tester.element(find.byType(ExperienceFormPage)), same(form));
 }
 
 Future<void> setCompleted(WidgetTester tester) async {
@@ -103,6 +108,7 @@ void main() {
     expect(find.text('Pilih kategori pengalaman.'), findsOneWidget);
     expect(field('save_status'), findsNothing);
     expect(find.byType(ExperienceSummaryDialog), findsNothing);
+    expect(find.byType(AlertDialog), findsNothing);
     // Save scrolls back to the first invalid field on a phone.
     expect(field('title').hitTestable(), findsOneWidget);
 
@@ -143,6 +149,52 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+
+  testWidgets('Save reaches the first remaining error and edits revalidate', (
+    tester,
+  ) async {
+    await openForm(tester);
+    await fillRequired(tester);
+    await enter(tester, 'thumbnail', 'bukan-url');
+    await enter(tester, 'started_at', '2026-02-30 10:00');
+    // Errors appear after the first Save attempt, then update on edits.
+    expect(find.textContaining('Gunakan URL http://'), findsNothing);
+    await save(tester);
+    expect(field('thumbnail').hitTestable(), findsOneWidget);
+    expect(find.byType(AlertDialog), findsNothing);
+    await enter(tester, 'thumbnail', 'https://example.com/photo.jpg');
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Gunakan URL http://'), findsNothing);
+    await save(tester);
+    expect(field('started_at').hitTestable(), findsOneWidget);
+    expect(find.byType(AlertDialog), findsNothing);
+    await enter(tester, 'started_at', '2026-05-20 10:00');
+    await tester.pumpAndSettle();
+    expect(
+      find.text('Gunakan tanggal valid: YYYY-MM-DD HH:mm (UTC).'),
+      findsNothing,
+    );
+
+    await setCompleted(tester);
+    expect(
+      find.text('Isi tanggal akhir atau aktifkan Masih berlangsung.'),
+      findsOneWidget,
+    );
+    await enter(tester, 'ended_at', '2026-05-19 10:00');
+    expect(
+      find.text('Tanggal akhir tidak boleh sebelum tanggal mulai.'),
+      findsOneWidget,
+    );
+    await setCompleted(tester);
+    expect(
+      find.text('Tanggal akhir tidak boleh sebelum tanggal mulai.'),
+      findsNothing,
+    );
+    await save(tester);
+    expect(find.byType(AlertDialog), findsOneWidget);
+    await closeSummary(tester);
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets(
     'rejects impossible dates, reversed dates, and missing end for completed work',
