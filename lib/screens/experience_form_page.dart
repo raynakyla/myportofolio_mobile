@@ -207,12 +207,8 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
     final isNarrow = MediaQuery.sizeOf(context).width < 600;
 
     return Scaffold(
-      drawer: PortfolioDrawer(
+      drawer: const PortfolioDrawer(
         currentDestination: PortfolioDestination.experience,
-        onDestinationSelected: (_) {
-          // Home stays at the bottom of the stack; reuse it instead of pushing.
-          Navigator.of(context).popUntil((route) => route.isFirst);
-        },
       ),
       appBar: AppBar(
         leading: const BackButton(),

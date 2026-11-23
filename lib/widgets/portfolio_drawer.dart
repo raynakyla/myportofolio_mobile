@@ -5,30 +5,48 @@ import 'package:myportofolio_mobile/theme/portfolio_colors.dart';
 import 'package:myportofolio_mobile/widgets/portfolio_glass_panel.dart';
 
 enum PortfolioDestination {
-  home('Home', Icons.home_outlined),
-  experience('Tambah Experience', Icons.work_outline_rounded);
+  home('Home', Icons.home_outlined, '/'),
+  experience(
+    'Tambah Experience',
+    Icons.work_outline_rounded,
+    '/experience/add',
+  ),
+  project('Tambah Project', Icons.add_to_photos_outlined, '/project/add');
 
-  const PortfolioDestination(this.label, this.icon);
+  const PortfolioDestination(this.label, this.icon, this.routeName);
 
   final String label;
   final IconData icon;
+  final String routeName;
+}
+
+void openPortfolioDestination(
+  BuildContext context,
+  PortfolioDestination destination,
+) {
+  if (ModalRoute.of(context)?.settings.name == destination.routeName) return;
+  final navigator = Navigator.of(context);
+  if (destination == PortfolioDestination.home) {
+    navigator.popUntil((route) => route.isFirst);
+  } else {
+    // Keep the original Home beneath one form, including when switching forms.
+    navigator.pushNamedAndRemoveUntil(
+      destination.routeName,
+      (route) => route.isFirst,
+    );
+  }
 }
 
 class PortfolioDrawer extends StatelessWidget {
-  const PortfolioDrawer({
-    super.key,
-    required this.currentDestination,
-    required this.onDestinationSelected,
-  });
+  const PortfolioDrawer({super.key, required this.currentDestination});
 
   final PortfolioDestination currentDestination;
-  final ValueChanged<PortfolioDestination> onDestinationSelected;
 
   void _select(BuildContext context, PortfolioDestination destination) {
     // Close the drawer via Scaffold so this never pops the page underneath it.
     Scaffold.of(context).closeDrawer();
     if (destination != currentDestination) {
-      onDestinationSelected(destination);
+      openPortfolioDestination(context, destination);
     }
   }
 

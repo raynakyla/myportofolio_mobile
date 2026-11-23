@@ -1,18 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:myportofolio_mobile/screens/experience_form_page.dart';
 import 'package:myportofolio_mobile/theme/portfolio_colors.dart';
 import 'package:myportofolio_mobile/widgets/portfolio_background.dart';
 import 'package:myportofolio_mobile/widgets/portfolio_drawer.dart';
 import 'package:myportofolio_mobile/widgets/portfolio_glass_panel.dart';
 
 const _compactWidth = 600.0;
-
-void _openExperience(BuildContext context) {
-  Navigator.push(
-    context,
-    MaterialPageRoute<void>(builder: (context) => const ExperienceFormPage()),
-  );
-}
 
 class ItemHomepage {
   const ItemHomepage(this.name, this.icon, this.accent, this.accentInk);
@@ -44,6 +36,12 @@ class MyHomePage extends StatelessWidget {
       PortfolioColors.roseInk,
     ),
     ItemHomepage(
+      'Tambah Project',
+      Icons.add_to_photos_outlined,
+      PortfolioColors.yellow,
+      Color(0xFF765621),
+    ),
+    ItemHomepage(
       'Logout',
       Icons.logout_rounded,
       PortfolioColors.lavender,
@@ -58,9 +56,8 @@ class MyHomePage extends StatelessWidget {
     final textScale = MediaQuery.textScalerOf(context).scale(16) / 16;
 
     return Scaffold(
-      drawer: PortfolioDrawer(
+      drawer: const PortfolioDrawer(
         currentDestination: PortfolioDestination.home,
-        onDestinationSelected: (_) => _openExperience(context),
       ),
       appBar: AppBar(
         leading: const DrawerButton(color: PortfolioColors.mauve),
@@ -463,7 +460,11 @@ class ItemCard extends StatelessWidget {
           final messenger = ScaffoldMessenger.of(context);
           messenger.removeCurrentSnackBar();
           if (item.name == 'Tambah Experience') {
-            _openExperience(context);
+            openPortfolioDestination(context, PortfolioDestination.experience);
+            return;
+          }
+          if (item.name == 'Tambah Project') {
+            openPortfolioDestination(context, PortfolioDestination.project);
             return;
           }
           messenger.showSnackBar(

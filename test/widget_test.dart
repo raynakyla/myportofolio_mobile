@@ -33,6 +33,7 @@ void main() {
     expect(find.text('PBP F'), findsOneWidget);
     expect(find.text('Lihat Proyek'), findsOneWidget);
     expect(find.text('Tambah Experience'), findsOneWidget);
+    expect(find.text('Tambah Project'), findsOneWidget);
     expect(find.text('Logout'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
@@ -66,6 +67,7 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.text('Lihat Proyek'), findsOneWidget);
     expect(find.text('Tambah Experience'), findsOneWidget);
+    expect(find.text('Tambah Project'), findsOneWidget);
     expect(find.text('Logout'), findsOneWidget);
   });
 
