@@ -1,10 +1,14 @@
 # MyPortfolio Mobile
 
 MyPortfolio Mobile adalah aplikasi portofolio Flutter yang dimulai pada Tutorial
-8 PBP, Tugas 7, dan Tutorial 9 di repositori mobile yang sama. Proyek ini
-terpisah dari portofolio Django. Home memakai data statis, sedangkan form
-Experience menyiapkan snapshot lokal dan menampilkannya dalam dialog ringkasan.
-Belum ada koneksi API atau pengiriman data ke Django.
+8 PBP, Tugas 7, Tutorial 09, dan Tugas Individu 8 semester 2026/2027 di repositori
+mobile yang sama. Proyek ini terpisah dari portofolio Django. Home memakai data
+statis, sedangkan form Project dan Experience menyiapkan snapshot lokal dan
+menampilkannya dalam dialog ringkasan. Save belum menyimpan data ke Django;
+belum ada koneksi API atau penyimpanan lintas sesi.
+
+Mulai dari [panduan menjalankan aplikasi](#menjalankan-aplikasi), lihat
+[struktur penting](#struktur-penting), atau baca [refleksi Tugas 8](#tugas-8).
 
 ## Identitas
 
@@ -15,12 +19,18 @@ Belum ada koneksi API atau pengiriman data ke Django.
 ## Fitur yang Sudah Tersedia
 
 - Tiga kartu informasi terpisah untuk nama, NPM, dan kelas.
-- Tiga tombol menu: **Lihat Proyek**, **Tambah Experience**, dan **Logout**.
-- SnackBar untuk Lihat Proyek dan Logout; Tambah Experience membuka form.
-- Drawer Home dan form dengan navigasi tanpa menumpuk salinan halaman.
+- Empat tombol menu: **Lihat Proyek**, **Tambah Experience**, **Tambah Project**,
+  dan **Logout**.
+- SnackBar untuk Lihat Proyek dan Logout; kedua aksi Tambah membuka form
+  masing-masing.
+- Drawer bersama berisi Home, Tambah Experience, dan Tambah Project, dengan
+  navigasi tanpa menumpuk salinan halaman.
 - Form Experience dengan validasi, kategori sesuai model Django lokal, dan
   tanggal/waktu UTC. Dialog ringkasan memakai snapshot data valid dan tetap
   mempertahankan isian setelah ditutup.
+- Form Project dengan judul, deskripsi, kategori, peran, dan keahlian yang
+  wajib diisi. Kedua form menampilkan hasil valid dalam `AlertDialog` dengan
+  tombol Tutup untuk kembali ke form.
 - Layout responsif untuk layar lebar dan layar sempit.
 - Tema pastel dengan gradient, panel kaca transparan, sudut membulat, dan
   bayangan lembut.
@@ -29,30 +39,98 @@ Belum ada koneksi API atau pengiriman data ke Django.
   internet.
 
 Daftar proyek dan logout sungguhan belum diimplementasikan. Save pada form
-Experience hanya memvalidasi dan menampilkan ringkasan lokal.
+Project maupun Experience hanya memvalidasi dan menampilkan ringkasan lokal.
 
 ## Prasyarat
 
 Sebelum menjalankan aplikasi, pastikan perangkat sudah memiliki:
 
-- Flutter SDK channel stable;
-- Git; dan
+- Flutter SDK channel stable dengan Dart yang memenuhi `sdk: ^3.13.7` pada
+  `pubspec.yaml` (minimal Dart 3.13.7 dan di bawah 4.0.0). Perintah `flutter`
+  harus tersedia di `PATH`;
+- Git yang bisa dipanggil dari terminal; dan
 - Google Chrome untuk target web.
 
-Android SDK juga diperlukan jika aplikasi ingin dijalankan pada emulator atau
-perangkat Android.
+Koneksi internet diperlukan untuk clone dan mengambil dependensi pertama kali.
+Font sudah ada di aset lokal. Repositori atau server Django tidak diperlukan
+untuk mencoba kedua form pada tahap preview ini.
+
+Android SDK juga diperlukan untuk pengujian pada emulator atau perangkat Android.
+Keberadaan folder `android/` belum berarti SDK di komputer pembaca sudah siap;
+ikuti langkah Android opsional di bawah jika toolchain belum dikonfigurasi.
 
 ## Menjalankan Aplikasi
 
-Buka PowerShell di Windows. Pastikan perintah `flutter` dikenali, masuk ke folder
-yang berisi `pubspec.yaml`, lalu ambil dependensi dan jalankan aplikasi di Chrome.
+Buka **Command Prompt (CMD)** di Windows. Semua blok perintah berikut bisa
+disalin ke CMD; contoh clone menggunakan folder pengguna agar tidak bergantung
+pada lokasi proyek di komputer saya.
 
-```powershell
-Set-Location C:\myportofolio_mobile
-flutter --version
-flutter pub get
-flutter run -d chrome
+1. Pastikan Git dan Flutter dikenali, lalu baca hasil pemeriksaan toolchain.
+
+   ```bat
+   git --version
+   flutter --version
+   flutter doctor
+   ```
+
+2. Clone URL repositori yang tercatat pada remote `origin`, masuk ke direktori
+   proyek, lalu pilih branch pengerjaan Tugas 8.
+
+   ```bat
+   cd /d "%USERPROFILE%"
+   git clone https://github.com/raynakyla/myportofolio_mobile.git
+   cd myportofolio_mobile
+   git switch task/tugas-8
+   ```
+
+   Jika repositori sudah ada di lokasi kerja saya, cukup masuk dengan
+   `cd /d C:\myportofolio_mobile`. Tidak perlu clone lagi ke folder yang sama.
+
+3. Dari direktori yang berisi `pubspec.yaml`, ambil dependensi dan periksa
+   perangkat yang tersedia.
+
+   ```bat
+   flutter pub get
+   flutter devices
+   ```
+
+4. Pastikan Chrome tercantum pada daftar perangkat, lalu jalankan target web.
+   Folder `web/` tersedia di repositori. Jika Chrome belum terdeteksi, periksa
+   pemasangan Chrome dan hasil `flutter doctor` terlebih dahulu.
+
+   ```bat
+   flutter run -d chrome
+   ```
+
+   Setelah selesai mencoba aplikasi, tekan `q` di terminal untuk menghentikan
+   proses sebelum menjalankan pemeriksaan berikutnya.
+
+5. Jalankan analisis statis dan tes dari direktori proyek.
+
+   ```bat
+   flutter analyze --no-pub
+   flutter test
+   ```
+
+   `flutter analyze` juga dapat dipakai; opsi `--no-pub` menggunakan dependensi
+   yang sudah diambil pada langkah 3.
+
+**Android (opsional).** Folder `android/` tersedia, tetapi panduan Chrome di atas
+tidak memerlukan Android SDK. Untuk mencoba Android, pasang Android Studio
+beserta Android SDK dan command-line tools, lalu siapkan emulator atau perangkat
+dengan USB debugging. Jika SDK belum dikonfigurasi, selesaikan temuan bagian
+Android toolchain pada `flutter doctor` sebelum melanjutkan.
+
+```bat
+flutter doctor --android-licenses
+flutter doctor
+flutter devices
+flutter run
 ```
+
+Pada pilihan perangkat yang muncul, pilih emulator/perangkat Android yang
+terdeteksi. Bagian ini merupakan petunjuk menjalankan target yang tersedia;
+pengujian langsung pada Android belum diverifikasi dalam tahap dokumentasi ini.
 
 Dokumentasi resmi Flutter dapat dibaca di
 [docs.flutter.dev](https://docs.flutter.dev/).
@@ -61,44 +139,60 @@ Dokumentasi resmi Flutter dapat dibaca di
 
 | Lokasi | Fungsi |
 | --- | --- |
-| `lib/main.dart` | Entry point, `MaterialApp`, dan konfigurasi tema serta font utama. |
-| `lib/screens/home_page.dart` | Halaman Home beserta widget dan metadata kartu yang hanya dipakai Home. |
+| `lib/main.dart` | Entry point `runApp`, `MaterialApp`, tema/font utama, dan pendaftaran named routes kedua form. |
+| `lib/screens/home_page.dart` | Halaman Home, identitas, hero, dan susunan empat kartu aksi. |
 | `lib/screens/experience_form_page.dart` | Halaman Tambah Experience, state isian, validasi, dan aksi Save. |
-| `lib/widgets/portfolio_drawer.dart` | Drawer dan pilihan navigasi yang dipakai kedua halaman. |
-| `lib/widgets/experience_summary_dialog.dart` | Dialog ringkasan dari snapshot Experience yang sudah valid. |
+| `lib/screens/project_form_page.dart` | Halaman Tambah Project dengan lima input wajib, validasi, dan preview lokal. |
+| `lib/models/experience_data.dart` | `ExperienceDraft` dan `ExperienceCategory` untuk snapshot lokal serta kategori pengalaman. |
+| `lib/models/project_data.dart` | `ProjectDraft` dan `ProjectCategory` untuk snapshot lokal serta kategori proyek. |
+| `lib/widgets/portfolio_action_card.dart` | `ItemCard` dan metadata `ItemHomepage`, termasuk callback navigasi atau SnackBar. |
+| `lib/widgets/portfolio_drawer.dart` | Drawer bersama, daftar tujuan, dan helper navigasi tanpa duplikasi Home/form. |
+| `lib/widgets/experience_summary_dialog.dart` | `AlertDialog` ringkasan Experience valid, dengan isi yang bisa digulir. |
+| `lib/widgets/project_summary_dialog.dart` | `AlertDialog` ringkasan kelima nilai Project valid. |
 | `lib/widgets/portfolio_glass_panel.dart` | Panel glass bersama untuk Home, form, drawer, dan dialog. |
 | `lib/widgets/portfolio_glass_button.dart` | Tombol Save dan Tutup dengan state fokus, hover, dan tekan. |
 | `lib/widgets/portfolio_background.dart` | Latar cream dengan orb pastel bersama untuk Home dan form. |
-| `lib/models/experience_data.dart` | `ExperienceDraft` dan `ExperienceCategory`, tanpa dependensi widget Flutter. |
 | `lib/theme/portfolio_colors.dart` | Palet warna bersama agar halaman dan widget tetap konsisten. |
 | `assets/fonts/` | Menyimpan font Playfair Display dan DM Sans beserta lisensinya agar tipografi tersedia secara offline. |
 | `test/widget_test.dart` | Tes Home, SnackBar, navigasi kartu/drawer, Back, dan layout responsif. |
 | `test/experience_form_test.dart` | Tes validasi, snapshot ringkasan, retensi isian, scroll panjang, dan inset keyboard. |
+| `test/project_form_test.dart` | Tes akses Project dari Home/drawer, validasi, dialog, kembali ke Home, dan layout. |
 | `pubspec.yaml` | Mendefinisikan metadata proyek, dependency, dan registrasi aset font beserta weight yang digunakan. |
 
-`screens/` mengelompokkan halaman yang dibuka lewat Navigator; `widgets/`
-menyimpan komponen antarmuka yang dipakai halaman; `models/` menyimpan data;
-dan `theme/` menyimpan palet. Widget khusus Home tetap berada di file Home
-karena belum dipakai halaman lain. Pada Tutorial 9 tahap 5, `menu.dart` dipindah
-menjadi `screens/home_page.dart`, dan `portfolio_style.dart` dipisah menjadi
-palet warna serta widget panel glass. Pemindahan ini tidak mengubah tampilan,
-validasi, atau alur Navigator.
+Di bawah `lib/`, `screens/` mengelompokkan halaman, `widgets/` menyimpan
+komponen antarmuka bersama, `models/` menyimpan data tanpa dependensi widget
+Flutter, dan `theme/` menyimpan palet. `test/` berisi widget test. Font TTF dan
+`OFL.txt` berada di `assets/fonts/dm_sans/` serta
+`assets/fonts/playfair_display/`. Tabel ini tidak memasukkan file hasil generate
+atau build.
+
+Pada Tutorial 9 tahap 5, `menu.dart` dipindah menjadi `screens/home_page.dart`,
+dan `portfolio_style.dart` dipisah menjadi palet warna serta widget panel glass.
+Pada perbaikan Tugas 8, kartu aksi dan metadatanya diekstrak ke
+`widgets/portfolio_action_card.dart` dengan perilaku yang tetap sama. Hero dan
+`InfoCard` khusus Home masih berada di file Home.
 
 ## Pemeriksaan Kode
 
 Gunakan perintah berikut untuk menjalankan analisis statis dan seluruh widget
 test:
 
-```powershell
-flutter analyze
+```bat
+flutter analyze --no-pub
 flutter test
 ```
 
-Seluruh 23 tes memeriksa Home, SnackBar, navigasi berulang lewat drawer,
-Back, validasi form, isi ringkasan, dan retensi isian setelah dialog ditutup.
+Hasil terakhir pada tahap implementasi Tugas 8: `flutter analyze --no-pub`
+tidak menemukan masalah dan `flutter test` melaporkan **36 tes lulus**. Angka ini
+berasal dari pemeriksaan implementasi sebelum pembaruan README ini; tes Flutter
+tidak dijalankan ulang hanya untuk perubahan dokumentasi.
+
+Tes memeriksa Home, SnackBar, akses kedua form dari kartu/drawer, navigasi
+berulang tanpa duplikasi route, Back, validasi form, isi `AlertDialog`, serta
+retensi isian setelah dialog ditutup dan pembaruan error saat isian diperbaiki.
 Pemeriksaan layout mencakup lebar 320, 390, dan 1280 px, deskripsi panjang,
-teks diperbesar, serta inset keyboard. Preview Chrome melengkapi tes untuk
-memeriksa tampilan dan interaksi langsung.
+teks diperbesar, serta inset keyboard. Pemeriksaan visual Chrome dan keyboard
+perangkat nyata untuk build terbaru masih perlu dilakukan langsung.
 
 ## Font dan Lisensi
 
@@ -121,37 +215,39 @@ yang digunakan tersedia di [assets/fonts/README.md](assets/fonts/README.md).
 Pada tahap ini saya melanjutkan Home dari Tugas 7 menjadi aplikasi yang bisa
 berpindah halaman dan menerima isian Experience. Pengerjaannya bertahap:
 halaman awal form, drawer, input dan validasi, ringkasan, perapian folder,
-polish tampilan, lalu audit dan dokumentasi. Data masih lokal di halaman;
+polish tampilan, lalu pengujian dan dokumentasi. Data masih lokal di halaman;
 tombol Save belum mengirim apa pun ke Django.
 
 ### Sumber instruksi dan penyesuaian proyek
 
-Saya memakai instruksi resmi **PBP Gasal 2026/2027**:
+Acuan yang saya baca adalah
+[Tutorial 09: Flutter Navigation, Layouts, Forms, and Input Elements](https://pbp.cs.ui.ac.id/tutorial/tutorial-9.html)
+pada situs resmi **PBP Gasal 2026/2027**.
 
-- [Tutorial 09: Flutter Navigation, Layouts, Forms, and Input Elements](https://pbp.cs.ui.ac.id/tutorial/tutorial-9.html).
-- [Individual Assignment 8](https://pbp.cs.ui.ac.id/assignments/individual/tugas-8.html).
-
-Keduanya sudah dibaca dari situs kampus. Halaman arsip `ganjil-2026` di GitHub
-Pages adalah semester 2025/2026 dengan penomoran dan konteks tugas berbeda,
-jadi bukan acuan untuk checklist di bawah ini.
-
-Contoh Tutorial 9 memakai **Tambah Proyek**, sedangkan implementasi saya saat
-ini memilih **Tambah Experience**. Ini sesuai topik Pengalaman yang dipilih
-untuk form portofolio, tetapi belum berarti semua ketentuan tutorial dan
-Tugas 8 sudah lengkap. Khususnya, Tugas 8 meminta opsi Home dan Add Project
-dari tutorial tetap dipertahankan saat opsi form baru ditambahkan.
+Contoh Tutorial 9 memakai **Tambah Proyek**. Pada implementasi awal saya
+menambahkan **Tambah Experience** untuk bagian Pengalaman pada portofolio.
+Dalam pengerjaan Tugas 8, alur **Tambah Project** dipulihkan sebagai aksi dan
+halaman tersendiri. Sekarang keduanya tersedia di Home dan drawer. Penjelasan
+berikut mengikuti perilaku kode saat ini.
 
 ### Alur navigasi dan drawer
 
-- Di Home, kartu **Tambah Experience** membuka `ExperienceFormPage` melalui
-  `Navigator.push()` dan `MaterialPageRoute`. Home tetap berada di bawahnya.
-- Drawer yang sama tersedia pada Home dan form. Ikon menu ada di kiri Home;
+- Di Home, kartu **Tambah Experience** membuka `ExperienceFormPage`, sedangkan
+  **Tambah Project** membuka `ProjectFormPage`. Callback `ItemCard` memanggil
+  `openPortfolioDestination()`, yang memakai
+  `Navigator.of(context).pushNamedAndRemoveUntil()` dengan predicate
+  `(route) => route.isFirst`. Nama route `/experience/add` dan `/project/add`
+  terdaftar di `MaterialApp.routes`; Home tetap berada di bawah satu form.
+- Drawer yang sama berisi **Home**, **Tambah Experience**, dan **Tambah Project**
+  pada ketiga halaman. Ikon menu ada di kiri Home;
   pada form, Back tetap di kiri dan ikon menu ada di kanan.
 - Memilih halaman yang sedang aktif hanya menutup drawer melalui
   `Scaffold.of(context).closeDrawer()`.
 - Dari form, pilihan Home memakai `popUntil((route) => route.isFirst)` untuk
   kembali ke Home yang sudah ada. Dengan begitu, bolak-balik lewat drawer
   tidak membuat banyak salinan halaman.
+- Berpindah antarform membuang route form sebelumnya dan mempertahankan Home.
+  Isian form yang ditinggalkan tidak disimpan sebagai draft permanen.
 - Back saat drawer terbuka menutup drawer terlebih dahulu. Back dari form
   kembali ke Home. `Navigator.pop()` pada dialog hanya menutup dialog.
 
@@ -180,11 +276,22 @@ Di model Django, nama field URL adalah `thumbnail`, bukan `thumbnail_url`.
 `ended_at`, sehingga snapshot Flutter juga menghitungnya dengan cara itu.
 
 `GlobalKey<FormState>` dibuat sekali di state halaman. Saat Save ditekan,
-`validateGranularly()` menjalankan validator dan mengembalikan field yang
-bermasalah. Halaman digulir ke error pertama. Jika semuanya valid, teks
+`FormState.validate()` menjalankan validator. Jika gagal, kode membaca
+`hasError` dari `form.fields` untuk menemukan error pertama, lalu memakai
+`Scrollable.ensureVisible()` agar field itu terjangkau, tanpa menjalankan
+validasi kedua untuk mencarinya. Setelah percobaan Save, perubahan isian
+memicu validasi kembali; rebuild biasa tidak memicu satu putaran tambahan.
+Jika semuanya valid, teks
 dirapikan di snapshot `ExperienceDraft` dan ringkasan dibuka. Controller form
 tidak dikosongkan. Jika isian diedit lagi, snapshot lama ditandai tidak berlaku
 dan Save berikutnya menyiapkan snapshot baru.
+
+Form Project menggunakan field wajib `title`, `description`, `category`, `role`,
+dan `skills`. Judul, peran, dan keahlian masing-masing dibatasi 255 karakter;
+teks kosong atau hanya spasi ditolak. Pilihannya adalah Web Development (`web`),
+Product & UX (`product`), dan Creative Work (`creative`). Project saat ini masih
+memakai `validateGranularly()` untuk memvalidasi sekaligus menemukan field salah.
+Field URL dan status featured Project belum ditampilkan pada form ini.
 
 Label tetap terlihat saat field terisi. Field disusun satu kolom dalam panel
 dengan lebar maksimum 720 px; `SingleChildScrollView` membuat bagian bawah
@@ -193,7 +300,8 @@ panel glass, latar, dan tombol aksi dipakai bersama agar tampilannya konsisten.
 
 ### Dialog ringkasan
 
-Setelah validasi berhasil, `showDialog()` membuka **Ringkasan Experience**.
+Setelah validasi berhasil, `showDialog()` membuka `ExperienceSummaryDialog`
+yang membangun `AlertDialog` berjudul **Ringkasan Experience**.
 Isinya berasal dari snapshot yang baru dibuat: judul, deskripsi, label kategori,
 URL thumbnail, tanggal mulai, status berlangsung, dan tanggal akhir. Nilai
 opsional kosong ditulis **Tidak diisi**, sedangkan tanggal akhir pengalaman
@@ -204,6 +312,11 @@ Dialog menggunakan panel glass yang cukup opak. Kontennya bisa digulir dan
 tombol Tutup berada di luar area gulir. Setelah dialog ditutup, pengguna bisa
 memeriksa atau mengoreksi isian yang sama. Tulisan preview lokal menjelaskan
 bahwa data belum dikirim ke server; tidak ada klaim berhasil tersimpan di Django.
+
+Form Project memakai `showDialog()` dengan `ProjectSummaryDialog`, juga berupa
+`AlertDialog`, untuk menampilkan judul, deskripsi, kategori, peran, dan keahlian.
+Tombol Tutup mengembalikan pengguna ke form Project dengan isian yang sama.
+Kedua dialog adalah preview lokal.
 
 ### Cara mencoba
 
@@ -222,44 +335,25 @@ bahwa data belum dikirim ke server; tidak ada klaim berhasil tersimpan di Django
    gulir isi dialog sampai bawah, dan pastikan Tutup tetap terjangkau.
 8. Gunakan Tab/Shift+Tab dan Enter untuk memeriksa fokus keyboard. Di desktop,
    coba hover dan klik Save; di HP, periksa form saat keyboard nyata tampil.
+9. Buka Tambah Project dari Home dan drawer. Coba Save kosong, lalu isi judul,
+   deskripsi, kategori, peran, dan keahlian. Periksa kelima nilai di ringkasan,
+   tutup dialog, lalu kembali ke Home atau pindah ke Experience lewat drawer.
 
-### Audit terhadap instruksi semester ini
+Daftar ini adalah panduan mencoba aplikasi; belum semuanya merupakan catatan
+pengujian manual yang sudah selesai.
 
-| Butir | Hasil pemeriksaan kode |
-| --- | --- |
-| Halaman baru di `screens/`, memakai StatefulWidget, Form, dan GlobalKey | Sudah ada pada ExperienceFormPage. |
-| Minimal tiga input sesuai model dengan validasi | Sudah ada, termasuk penolakan spasi, batas judul/URL, dan hubungan tanggal/status. |
-| Kartu Home membuka form memakai `Navigator.push()` | Sudah ada untuk Tambah Experience. |
-| Drawer bersama, opsi aktif, Home, dan akses form | Sudah ada untuk Home dan Tambah Experience; navigasi berulang diuji. |
-| Form/opsi Add Project dari Tutorial 9 tetap ada saat Experience ditambahkan | **Belum terpenuhi.** Kartu Tambah Proyek diganti menjadi Tambah Experience pada tahap 1, dan form Project belum dibuat. |
-| Kartu aksi dipisah ke `widgets/` sesuai bagian refactor/rubrik | **Belum terpenuhi secara literal.** ItemCard dan metadata kartu masih bersama Home karena belum dipakai halaman lain. |
-| Save memvalidasi sebelum menampilkan semua data | Sudah berjalan. Kode memakai `validateGranularly()`, bukan pemanggilan literal `validate()`, untuk sekaligus menemukan error pertama. |
-| Ringkasan melalui `showDialog()` dan tombol penutup | Sudah berjalan, tetapi widget yang dipakai adalah Dialog khusus, bukan AlertDialog yang disebut instruksi. Ini perlu diperhatikan bila penilaian mensyaratkan widget literal. |
-| Reset setelah dialog pada contoh tutorial | Penyesuaian UX: form sengaja dipertahankan sesuai arahan proyek ini. |
-| Tidak ada TODO pada kode aplikasi | Sudah diperiksa pada `lib/`; tidak ada TODO implementasi yang tersisa. |
-| Analisis, pengujian, dokumentasi, dan pengungkapan AI | Hasil pemeriksaan dicatat di bawah; refleksi Tugas 8 dan pengungkapan Tutorial 9 ditambahkan tanpa menghapus bagian lama. |
-| Commit/push publik dan tautan commit di SCELE sesuai tenggat | **Belum diverifikasi.** Audit lokal tidak membuktikan status pengumpulan, waktu push, atau akses publik repositori. Commit/push tahap ini dilakukan sendiri oleh pemilik proyek. |
+### Pengujian dan batas implementasi
 
-Tutorial 9 merupakan prasyarat Tugas 8. Instruksi resminya mencantumkan tenggat
-Tutorial 9 pada 18 November 2026 pukul 23.59 WIB dan Tugas 8 pada 23 November
-2026 pukul 23.59 WIB. Status pengumpulan tidak disimpulkan dari hasil tes lokal.
-Bagian yang belum terpenuhi di atas dicatat, bukan diam-diam dianggap selesai
-atau diubah menjadi fitur baru di luar audit tahap ini.
-
-### Hasil pengecekan dan batas implementasi
-
-Polish tahap 6 sudah tersimpan dalam commit
-`30a0ac2` (`style: unify pastel glass portfolio UI and interactions`). Pada awal
-audit tahap 7, branch aktif `task/tutorial-9` dan working tree bersih.
-
-- Tes otomatis sebelumnya: 23 tes lulus, termasuk lebar 320/390/1280 px,
+- Pada tahap sebelumnya terdapat 23 tes lulus; setelah pemulihan Project dan
+  perbaikan rubrik Experience, hasil terakhir menjadi 36 tes lulus. Cakupannya
+  termasuk lebar 320/390/1280 px,
   teks 200%, inset keyboard, fokus keyboard, input salah/valid, dialog panjang,
   serta retensi isian. Pemeriksaan tersebut bukan pengganti keyboard HP nyata.
-- Audit visual Chrome tahap 7: hasil akhirnya akan dicatat setelah pemeriksaan
-  langsung build terbaru selesai; hasil tahap 6 yang terhenti tidak dianggap
-  sebagai bukti pemeriksaan visual build terbaru.
+- Pemeriksaan visual build terbaru di Chrome belum selesai karena kontrol
+  komputer dihentikan dengan Escape. Hasil tes otomatis di atas tidak dianggap
+  sebagai bukti pemeriksaan visual Chrome yang sudah selesai.
 - Belum ada API, autentikasi, database, penyimpanan lintas sesi, atau daftar
-  Experience yang diperbarui setelah Save. Lihat Proyek dan Logout masih SnackBar.
+  Project/Experience yang diperbarui setelah Save. Lihat Proyek dan Logout masih SnackBar.
 - Keyboard mobile nyata dan perilaku Back sistem Android/iOS tetap memerlukan
   pengujian pada perangkat atau emulator yang sesuai.
 
@@ -273,6 +367,20 @@ audit tahap 7, branch aktif `task/tutorial-9` dan working tree bersih.
   tinggi saat teks membungkus. Tema kaca pastel diperhalus dengan permukaan icy
   pink, butter yellow, dan lavender serta umpan balik hover, tekan, dan fokus
   keyboard.
+- **Tutorial 09.** Navigasi Home ke form, drawer bersama, input/validator, dan
+  dialog ringkasan ditambahkan bertahap. Implementasi awal berfokus pada
+  Experience; alur Project kemudian dipulihkan saat pengerjaan Tugas 8.
+- **Tugas 8 (2026/2027).** Form Experience dipertahankan sebagai halaman
+  `StatefulWidget` tersendiri dengan `Form` dan `GlobalKey<FormState>`.
+  Project dan Experience dapat dibuka dari kartu Home maupun drawer. Save
+  Experience memakai `validate()` dan `AlertDialog`, kartu aksi dipisah ke
+  `widgets/`, dan tes diperluas. Save kedua form masih berupa preview lokal;
+  data belum disimpan ke Django. Hasil tes tidak membuktikan pemeriksaan
+  browser/perangkat terbaru atau pengumpulan tugas sudah selesai.
+
+Jawaban Tugas 7 berikut dipertahankan sebagai catatan tahap tersebut. Untuk
+perubahan form, lokasi kartu aksi, dan navigasi yang sekarang dipakai, lihat
+[Tugas 8](#tugas-8) serta bagian Tutorial 9 di atas.
 
 ### Tugas 7
 
@@ -419,74 +527,110 @@ audit tahap 7, branch aktif `task/tutorial-9` dan working tree bersih.
 
 ### Tugas 8
 
-Jawaban ini mengikuti empat pertanyaan refleksi pada
-[instruksi Tugas 8 Gasal 2026/2027](https://pbp.cs.ui.ac.id/assignments/individual/tugas-8.html),
-bukan daftar pertanyaan dari arsip semester sebelumnya.
+Refleksi ini untuk Tugas Individu 8 PBP semester 2026/2027 dan mengikuti kode
+yang sekarang ada di branch `task/tugas-8`.
 
-1. **Bagaimana perpindahan halaman bekerja di aplikasi saya?**
+1. **Apa perbedaan `Navigator.push()`, `Navigator.pushReplacement()`, dan
+   `Navigator.pop()`, serta bagaimana saya memakainya untuk berpindah halaman?**
 
-   `Navigator.push()` menambahkan halaman di atas tumpukan yang sudah ada.
-   Saya memakainya ketika kartu Tambah Experience membuka form, sehingga Home
-   masih ada di bawahnya dan bisa dituju lagi dengan Back. `pushReplacement()`
-   mengganti halaman teratas; metode ini tidak dipakai dalam alur aplikasi saya
-   saat ini. Contoh kegunaannya nanti adalah mengganti halaman login setelah
-   login selesai, tetapi login tersebut belum diimplementasikan.
+   Saya memahami navigasi sebagai tumpukan halaman. `Navigator.push()`
+   menambahkan route baru di atas halaman sekarang, sehingga halaman sebelumnya
+   masih bisa dituju dengan Back. `Navigator.pushReplacement()` mengganti route
+   paling atas, jadi route yang diganti tidak lagi menjadi tujuan Back.
+   `Navigator.pop()` melepas route teratas; route itu bisa berupa halaman atau
+   dialog.
 
-   `pop()` melepas halaman atau dialog teratas. Pada Ringkasan Experience,
-   `pop()` hanya menutup dialog, jadi pengguna kembali ke form dengan isian yang
-   sama. Pilihan Home di drawer memakai `popUntil((route) => route.isFirst)`,
-   bukan membuat Home baru. Drawer ditutup terlebih dahulu; jika pengguna
-   memilih halaman yang sudah aktif, cukup drawer-nya yang ditutup.
+   Di aplikasi saya sekarang, kartu Tambah Experience dan Tambah Project
+   memanggil `openPortfolioDestination()`. Helper ini memakai
+   `Navigator.of(context).pushNamedAndRemoveUntil()` dengan predicate
+   `(route) => route.isFirst`, sesuai route yang didaftarkan di `main.dart`.
+   Jadi contoh konsep `push()` di atas bukan pemanggilan literal dari kartu
+   pada versi sekarang: implementasinya menambahkan form tujuan sekaligus
+   membuang form lama jika saya sedang berpindah antarform, sambil menjaga
+   Home tetap ada di dasar tumpukan.
 
-2. **Apa yang membuat kerangka dan tema halaman tetap konsisten?**
+   Pilihan Home di drawer menutup drawer lalu memanggil
+   `Navigator.of(context).popUntil((route) => route.isFirst)`. Home yang sudah
+   ada dipakai lagi. Memilih tujuan yang sedang aktif cukup menutup drawer.
+   Tombol Tutup pada dialog memakai `Navigator.of(context).pop()` sehingga
+   saya kembali ke form dengan isian yang sama. `pushReplacement()` belum
+   dipakai dalam alur ini. Sebagai contoh hipotetis, metode itu bisa mengganti
+   halaman login setelah autentikasi berhasil; fitur login belum ada di proyek
+   ini.
 
-   Home dan form sama-sama memakai `Scaffold` sebagai kerangka. `AppBar`
-   menyediakan judul dan tombol navigasi, sedangkan properti `drawer` memasang
-   `PortfolioDrawer` yang sama di kedua halaman. Form tetap memiliki Back di
-   kiri dan tombol drawer di kanan. Dengan susunan ini, pengguna tetap tahu
-   sedang berada di halaman mana dan bagaimana kembali.
+2. **Bagaimana `Scaffold`, `AppBar`, dan `Drawer` menjaga struktur halaman
+   tetap konsisten?**
 
-   Sebagai contoh, `PortfolioColors.cream` dipakai untuk latar dan AppBar,
-   sedangkan icy pink dipakai pada panel serta aksi utama di beberapa halaman.
-   `PortfolioBackground`, `PortfolioGlassPanel`, dan `PortfolioGlassButton`
-   menghindarkan tiap halaman dari membuat gaya sendiri-sendiri. Heading
-   memakai Playfair Display dan antarmuka memakai DM Sans dari aset lokal.
+   Saya memakai `Scaffold` sebagai kerangka Home, form Project, dan form
+   Experience. `AppBar` menyediakan judul serta tombol navigasi. Properti
+   `drawer` pada ketiganya memasang `PortfolioDrawer` yang sama, dengan pilihan
+   Home, Tambah Experience, dan Tambah Project. Di Home ikon drawer berada di
+   kiri; di form ada Back di kiri dan ikon drawer di kanan. Susunan ini
+   membantu saya tetap menyediakan jalan kembali tanpa membuat ulang menu
+   pada setiap halaman.
 
-3. **Mengapa formulir disusun satu kolom dan bisa digulir?**
+   Salah satu warna yang benar-benar dipakai bersama adalah
+   `PortfolioColors.cream`, yaitu `Color(0xFFFFF9F3)`. Warna ini menjadi latar
+   Scaffold dan AppBar lewat tema di `main.dart`, serta latar drawer. Panel,
+   tombol, dan latar juga memakai widget bersama supaya icy pink, soft yellow,
+   lavender, Playfair Display, dan DM Sans terasa konsisten di seluruh alur.
 
-   Saya memilih satu kolom supaya urutan pengisian jelas di HP. Di desktop,
-   lebarnya dibatasi 720 px agar field tidak terlalu melebar. `Padding` memberi
-   ruang dari tepi layar dan panel, sedangkan `SizedBox` memisahkan judul,
-   field, kelompok waktu/status, dan tombol Save.
+3. **Mengapa saya memilih layout form ini, dan apa peran jarak serta widget
+   scrolling ketika ruang layar terbatas?**
 
-   `Column` sendiri tidak bisa digulir, jadi form dibungkus
-   `SingleChildScrollView`. Ketika ruang berkurang karena keyboard, bagian bawah
-   tetap bisa dijangkau; drag juga bisa menutup keyboard. Drawer memakai
-   `ListView` agar pilihan navigasi bisa digulir jika ruangnya sempit. Dialog
-   memakai `Flexible` dan `SingleChildScrollView` untuk kontennya, sementara
-   tombol Tutup diletakkan di luar area gulir agar tidak ikut tersembunyi di
-   bawah deskripsi panjang.
+   Saya memilih `Column` satu kolom supaya urutan mengisi field mudah diikuti
+   di HP. Pada layar lebar, `ConstrainedBox` membatasi panel form sampai 720 px
+   agar kolom input tidak terlalu panjang. `Padding` memberi ruang dari tepi
+   layar dan panel, sedangkan `SizedBox` memberi jarak antarjudul, field,
+   kelompok waktu/status, dan Save. Dengan jarak itu, pesan error tetap punya
+   tempat tanpa menempel pada input berikutnya.
 
-4. **Bagaimana key form dan validator bekerja saat Save ditekan?**
+   `Column` tidak menyediakan scrolling, jadi saya membungkus isi form dengan
+   `SingleChildScrollView` di dalam `SafeArea`. Ketika keyboard mengurangi
+   ruang yang tersedia pada Scaffold, bagian bawah form bisa digulir agar Save
+   tetap terjangkau. Drag pada area gulir juga bisa menutup keyboard. Drawer
+   memakai `ListView`, dan konten ringkasan di dalam `AlertDialog` memakai
+   `SingleChildScrollView`. Tombol Tutup ada pada `actions`, di luar area gulir
+   konten, sehingga deskripsi panjang tidak menyembunyikan tombol tersebut.
+   Perilaku ruang keyboard diuji dengan inset pada widget test; saya masih
+   perlu memeriksanya pada perangkat nyata.
 
-   `GlobalKey<FormState>` menjadi pegangan ke state satu form dan dibuat sebagai
-   field state halaman, bukan dibuat ulang setiap `build()`. Tiap `validator`
-   mengembalikan pesan ketika nilai salah atau `null` jika lolos. Pemanggilan
-   `validate()` pada instruksi bertujuan menjalankan pemeriksaan semua field.
-   Implementasi saya menggunakan `validateGranularly()`, yang juga menjalankan
-   validator tetapi sekaligus mengembalikan kumpulan field yang bermasalah,
-   sehingga error pertama bisa dibawa ke layar.
+4. **Apa fungsi `GlobalKey<FormState>`, `validator`, dan `validate()` saat
+   Save, serta mengapa tipe input belum cukup untuk memastikan data valid?**
 
-   Contohnya, judul berisi spasi saja ditolak karena setelah `trim()` nilainya
-   kosong. `2026-02-30 10:00` juga ditolak walaupun format tulisannya terlihat
-   seperti tanggal. Memilih keyboard URL atau tanggal hanya membantu cara
-   mengetik; pengguna tetap bisa menempelkan nilai yang salah, sehingga tipe
-   keyboard tidak menggantikan validasi. Jika masih ada error, dialog tidak
-   dibuka. Jika semua valid, Save membuat `ExperienceDraft` dari nilai yang
-   dirapikan lalu membuka ringkasan lokal. Itu belum berarti data tersimpan di
-   Django.
+   `GlobalKey<FormState>` saya pahami sebagai pegangan ke state `Form`.
+   Di `ExperienceFormPage`, key dibuat sekali sebagai field state halaman,
+   sehingga tidak dibuat ulang setiap `build()`. Setiap `validator`
+   mengembalikan pesan error jika input salah, atau `null` jika sudah benar.
+   Saat Save ditekan, kode mengambil state lewat key lalu memanggil
+   `form.validate()` untuk memeriksa seluruh field.
+
+   Kalau hasilnya `false`, dialog tidak dibuka. Kode membaca `hasError` pada
+   `form.fields`, lalu menggulir ke field salah pertama dengan
+   `Scrollable.ensureVisible()`. Pencarian error memakai hasil pemeriksaan
+   tadi, jadi tidak perlu memanggil `validateGranularly()` setelah `validate()`.
+   Setelah percobaan Save, perubahan isian memicu validasi lagi agar error bisa
+   diperbarui. Jika semua lolos, kode membuat `ExperienceDraft` dengan teks
+   yang sudah di-`trim()`, lalu `showDialog()` menampilkan semua nilai dalam
+   `AlertDialog`. Controller tetap menyimpan isian pengguna setelah dialog
+   ditutup.
+
+   Contoh input yang ditolak adalah judul berisi spasi saja, karena hasil
+   `trim()` kosong. Tanggal `2026-02-30 10:00` juga ditolak karena 30 Februari
+   tidak ada; judul di atas 255 karakter dan thumbnail `bukan-url` juga tidak
+   lolos. `keyboardType` URL atau tanggal hanya membantu saya mengetik.
+   Pengguna masih bisa menempelkan teks yang salah, sehingga keyboard dan tipe
+   input tidak menggantikan validator. Pada form Project, API validasinya masih
+   `validateGranularly()`; penjelasan pemanggilan literal `validate()` di atas
+   merujuk pada Experience. Save keduanya tetap berupa preview lokal dan belum
+   menyimpan data ke Django.
 
 ## Penggunaan AI
+
+### Catatan Tutorial 8 dan Tugas 7
+
+Catatan dan hasil pemeriksaan berikut berasal dari tahap Tutorial 8/Tugas 7.
+Status build terbaru untuk Tugas 8 dijelaskan pada bagian tersendiri di bawah.
 
 ChatGPT membantu menjelaskan tugas dan konsep Flutter serta menyiapkan prompt
 pengerjaan bertahap. Pada Tutorial 8, Codex ikut mengerjakan refactor,
@@ -532,8 +676,8 @@ Ringkasan log prompt yang dipakai:
    perilaku.
 6. Samakan UI pastel glass, font lokal, aksesibilitas, dan state interaksi;
    periksa dengan analisis serta tes.
-7. Audit build terbaru di Chrome, baca sumber resmi semester ini, cocokkan
-   checklist, lalu perbarui README dan refleksi dengan batas yang jujur.
+7. Periksa build terbaru di Chrome dan sumber resmi Tutorial 9, lalu
+   dokumentasikan fitur, cara mencoba, serta batas implementasi yang sebenarnya.
 
 Ini adalah ringkasan arahan dari percakapan pengerjaan, bukan tautan transkrip
 chat lengkap yang sudah dipublikasikan. Atribusi Tutorial 8 dan Tugas 7 di atas
@@ -543,16 +687,64 @@ Ada koreksi yang penting selama prosesnya. Prompt awal sempat menganggap
 drawer dan form sudah ada, padahal baseline baru Home; asumsi itu dikoreksi
 sebelum fitur dibuat. Pencarian sumber juga sempat menemukan arsip 2025/2026,
 lalu sumber diganti ke situs resmi 2026/2027 setelah tautan yang benar diketahui.
-Karena itu, hasil AI tidak langsung dianggap sebagai bukti bahwa seluruh
-checklist tugas sudah terpenuhi.
+Karena itu, sumber dan perilaku aplikasi tetap diperiksa sebelum penjelasan
+Tutorial 9 dimasukkan ke README.
 
 Validasi dan navigasi diperiksa dengan tes otomatis, tetapi tes tidak
 membuktikan tampilan Chrome atau keyboard HP nyata sudah diperiksa. Pemeriksaan
 visual tahap 6 terhenti ketika kontrol komputer dihentikan dengan Escape;
-hasil itu tidak ditulis sebagai pemeriksaan visual yang selesai. Audit tahap 7
-dicatat terpisah sesuai hasil yang benar-benar diamati. Selisih terhadap contoh
-Project, struktur kartu aksi, dan widget/API literal juga dicatat pada checklist,
-bukan ditutupi dengan klaim bahwa semua syarat sudah selesai.
+hasil itu tidak ditulis sebagai pemeriksaan visual yang selesai. Percobaan
+berikutnya juga terhenti, sehingga pemeriksaan visual build terbaru tetap
+dicatat belum selesai. Dokumentasi ini membedakan hasil tes otomatis, perilaku
+yang terlihat dari kode, dan hal yang masih perlu dicoba langsung.
+
+### Bantuan AI pada Tugas 8
+
+Untuk Tugas 8, ChatGPT membantu saya memahami instruksi dan menyiapkan prompt
+bertahap. Codex membaca kode Flutter serta model Django lokal, mengimplementasikan
+dan mengaudit form Project/Experience, memperbaiki navigasi bersama, mencocokkan
+detail dengan rubrik, serta menambahkan dan menjalankan tes. Saya meninjau
+hasilnya, menentukan arah desain pastel glass, dan memberi arahan tentang
+lingkup perubahan serta perilaku yang perlu dipertahankan. Pada tahap dokumentasi
+ini, Codex juga membantu mencocokkan README dengan implementasi.
+
+Strateginya saya bagi menjadi pemulihan fitur, audit rubrik, lalu dokumentasi.
+Setiap prompt meminta pemeriksaan kode lebih dulu, batas perubahan yang jelas,
+dan hasil yang bisa ditinjau. Pada tahap kode, README milik saya diminta tetap
+utuh; pada tahap README ini, kode aplikasi diminta tidak diubah. API persistence,
+staging, commit, dan push tidak termasuk pekerjaan yang saya minta pada tahap
+tersebut.
+
+**Ringkasan prompt Tugas 8 — bukan transkrip verbatim:**
+
+1. Baca kode Flutter, tes, navigasi, tema, dan model Project Django yang nyata.
+   Pulihkan Tambah Project di Home/drawer serta form terpisah dengan validasi
+   dan dialog preview lokal, sambil menjaga Experience serta desain yang ada.
+2. Audit Experience terhadap persyaratan Tugas 8: Save harus memanggil
+   `FormState.validate()`, ringkasan memakai `AlertDialog`, error pertama tetap
+   terjangkau, dan isian tidak hilang setelah dialog ditutup. Pindahkan kartu
+   aksi ke `lib/widgets/`, tambah tes yang relevan, lalu jalankan analisis dan
+   seluruh tes.
+3. Baca dan pertahankan edit README yang sudah ada. Lengkapi struktur proyek,
+   petunjuk clone/setup CMD, progres mingguan, empat refleksi Tugas 8, dan
+   pengungkapan AI berdasarkan kode; jangan ubah aplikasi atau menjalankan
+   ulang tes hanya untuk dokumentasi.
+
+Ada dua koreksi yang konkret. Alur Tambah Project sempat tergantikan oleh
+Experience, sehingga saya meminta Project dipulihkan sebagai tujuan terpisah.
+Selain itu, ringkasan Experience awalnya memakai custom `Dialog` dan Save
+memakai `validateGranularly()`. Audit kemudian menggantinya dengan
+`AlertDialog` serta pemanggilan `validate()` agar sesuai dengan persyaratan
+literal, sambil tetap memakai hasil error untuk menjangkau field pertama.
+Koreksi ini mengingatkan saya bahwa tampilan dan alur yang tampak berjalan
+masih perlu diperiksa terhadap detail instruksi.
+
+Hasil implementasi terakhir adalah analisis tanpa temuan dan 36 tes lulus,
+seperti dicatat pada [Pemeriksaan Kode](#pemeriksaan-kode). Tes otomatis tidak
+membuktikan pemeriksaan visual browser, keyboard HP nyata, atau pengumpulan
+tugas sudah selesai. Ringkasan prompt di atas merangkum arahan pengerjaan;
+pemeriksaan manual terbaru dan status pengumpulan tetap perlu saya verifikasi
+sendiri.
 
 ## Referensi Flutter
 
