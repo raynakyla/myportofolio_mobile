@@ -328,6 +328,59 @@ superuser, aplikasi menampilkan alasan dan mempertahankan sesi. Jika hasil
 penyimpanan tidak dapat dikonfirmasi karena masalah koneksi atau respons,
 periksa daftar sebelum mencoba menyimpan lagi.
 
+## CI/CD Tutorial 10
+
+Workflow **CI** berjalan pada push ke `main` dan pull request. Job `build`
+menggunakan Flutter 3.47.9 dan dependensi dari lockfile. Job ini menjalankan
+`build_runner`, memeriksa bahwa `lib/models/project.g.dart` sama dengan versi
+Git, lalu memeriksa format, analyzer, dan seluruh tes. Coverage dilaporkan
+setelah mengecualikan file `*.g.dart`, dengan ambang minimum 0%.
+
+Reusable workflow Very Good Open Source `flutter_package.yml@v2` menerima
+`setup`, `coverage_excludes`, `min_coverage`, dan `timeout_minutes` dari
+tutorial. Contoh tersebut memakai `very_good test`. Job eksplisit di repo ini
+menjalankan perintah Flutter secara langsung, memakai lockfile, dan
+memeriksa kesesuaian hasil generate yang dilacak Git. `build_runner` versi
+repo sudah tidak memerlukan `--delete-conflicting-outputs`.
+[Sumber reusable workflow](https://github.com/VeryGoodOpenSource/very_good_workflows/blob/v2/.github/workflows/flutter_package.yml).
+
+Untuk mengulang pemeriksaan inti dari root proyek dengan Flutter 3.47.9:
+
+```powershell
+flutter pub get --enforce-lockfile
+dart run build_runner build
+git diff --exit-code HEAD -- lib/models/project.g.dart
+dart format --output=none --set-exit-if-changed .
+flutter analyze --no-pub
+flutter test --no-pub --coverage
+```
+
+Jika `project.g.dart` berbeda setelah generate karena model diubah, commit
+model dan file hasil generate bersama. Jika `actionlint` tersedia, jalankan
+`actionlint .github/workflows/main.yaml` untuk memeriksa workflow lokal.
+
+Setelah job `build` sukses, `build_apk` menyiapkan JDK 17, Android SDK 36,
+dan NDK 28.2, kemudian mengompilasi APK release. Untuk mengunduhnya, masuk ke
+GitHub, buka **Actions → CI → run yang sukses → Artifacts**, lalu unduh
+**app-release-apk** dan ekstrak `app-release.apk`. Build ini mengikuti
+konfigurasi Gradle proyek yang memakai kunci debug untuk penandatanganan APK.
+[Panduan unduh artifact](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/download-workflow-artifacts).
+
+Artifact bawaan memakai `API_BASE_URL=http://10.0.2.2:8000`, alamat host dari
+emulator Android. Untuk perangkat yang perlu mengakses Django publik, build
+ulang dengan origin HTTPS Django yang telah diverifikasi dan dapat dijangkau
+perangkat. Isi variabel berikut dengan origin tersebut, tanpa `/api/v1/`:
+
+```powershell
+$backendUrl = Read-Host 'Origin HTTPS Django'
+flutter build apk --release "--dart-define=API_BASE_URL=$backendUrl"
+```
+
+Manifest utama menyediakan izin `INTERNET` untuk koneksi HTTPS pada release.
+Pengaturan cleartext pengembangan ada di manifest debug. `flutter doctor -v`
+pada lingkungan verifikasi lokal tidak menemukan Android SDK. Build dan
+pengunggahan artifact baru dapat dikonfirmasi pada run GitHub Actions pertama.
+
 ## Struktur Penting
 
 | Lokasi | Fungsi |
