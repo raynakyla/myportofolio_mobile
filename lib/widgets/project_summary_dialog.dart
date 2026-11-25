@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:myportofolio_mobile/models/project_data.dart';
+import 'package:myportofolio_mobile/models/project.dart';
 import 'package:myportofolio_mobile/theme/portfolio_colors.dart';
 import 'package:myportofolio_mobile/widgets/portfolio_glass_button.dart';
 import 'package:myportofolio_mobile/widgets/portfolio_glass_panel.dart';
@@ -7,7 +7,7 @@ import 'package:myportofolio_mobile/widgets/portfolio_glass_panel.dart';
 class ProjectSummaryDialog extends StatelessWidget {
   const ProjectSummaryDialog({super.key, required this.project});
 
-  final ProjectDraft project;
+  final Project project;
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +18,7 @@ class ProjectSummaryDialog extends StatelessWidget {
       constraints: const BoxConstraints(maxWidth: 640),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       title: const Text(
-        'Ringkasan Project',
+        'Proyek tersimpan',
         style: TextStyle(
           fontFamily: 'Playfair Display',
           fontWeight: FontWeight.w600,
@@ -35,17 +35,18 @@ class ProjectSummaryDialog extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text(
-                  'Preview lokal. Data ini belum dikirim ke Django.',
-                  style: TextStyle(color: PortfolioColors.roseInk, height: 1.5),
-                ),
-                const SizedBox(height: 24),
                 for (final field in [
                   ('title', 'Judul', project.title),
                   ('description', 'Deskripsi', project.description),
                   ('category', 'Kategori', project.category.label),
                   ('role', 'Peran', project.role),
                   ('skills', 'Keahlian', project.skills),
+                  if (project.projectUrl.isNotEmpty)
+                    ('project_url', 'Tautan proyek', project.projectUrl),
+                  if (project.thumbnail.isNotEmpty)
+                    ('thumbnail', 'Thumbnail', project.thumbnail),
+                  if (project.isFeatured)
+                    ('featured', 'Status', 'Proyek pilihan'),
                 ]) ...[
                   Text(
                     field.$2,
@@ -72,10 +73,18 @@ class ProjectSummaryDialog extends StatelessWidget {
         ),
       ),
       actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(false),
+          style: TextButton.styleFrom(
+            minimumSize: const Size(48, 48),
+            foregroundColor: PortfolioColors.roseInk,
+          ),
+          child: const Text('Tutup'),
+        ),
         PortfolioGlassButton(
-          label: 'Tutup',
-          icon: Icons.close_rounded,
-          onPressed: () => Navigator.of(context).pop(),
+          label: 'Lihat daftar proyek',
+          icon: Icons.arrow_forward_rounded,
+          onPressed: () => Navigator.of(context).pop(true),
         ),
       ],
     );

@@ -1,31 +1,76 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
+import 'package:myportofolio_mobile/auth/auth_state.dart';
 import 'package:myportofolio_mobile/main.dart';
 import 'package:myportofolio_mobile/models/project_data.dart';
 import 'package:myportofolio_mobile/screens/experience_form_page.dart';
 import 'package:myportofolio_mobile/screens/home_page.dart';
+import 'package:myportofolio_mobile/screens/login_page.dart';
 import 'package:myportofolio_mobile/screens/project_form_page.dart';
+import 'package:myportofolio_mobile/screens/project_list_page.dart';
+import 'package:myportofolio_mobile/services/api_client.dart';
 import 'package:myportofolio_mobile/widgets/project_summary_dialog.dart';
 
 import 'support/auth_test_support.dart';
 
 Finder field(String name) => find.byKey(ValueKey('project_$name'));
 
-Future<void> launch(WidgetTester tester, {double width = 390}) async {
+http.Response savedResponse(http.Request request, {String? title}) {
+  final input = jsonDecode(request.body) as Map<String, dynamic>;
+  return http.Response.bytes(
+    utf8.encode(
+      jsonEncode({
+        ...input,
+        'id': '57336b4c-d7fe-4ae3-9c02-65d772eb8526',
+        'title': ?title,
+      }),
+    ),
+    201,
+  );
+}
+
+Future<AuthState> launch(
+  WidgetTester tester, {
+  double width = 390,
+  Future<http.Response> Function(http.Request)? handleProject,
+}) async {
   tester.view.physicalSize = Size(width, 844);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
-  await tester.pumpWidget(MyApp(authState: await signedInTestAuth()));
+  final token = sessionTestToken();
+  final client = MockClient((request) async {
+    if (request.url.path.endsWith('/auth/token/')) return tokenResponse(token);
+    if (handleProject != null) return handleProject(request);
+    expect(request.method, 'POST');
+    return savedResponse(request);
+  });
+  addTearDown(client.close);
+  final api = ApiClient(client: client);
+  final auth = AuthState(api);
+  addTearDown(auth.dispose);
+  expect(await auth.login('test-owner', sessionTestToken()), isTrue);
+  await tester.pumpWidget(MyApp(apiClient: api, authState: auth));
+  return auth;
 }
 
-Future<void> openProject(WidgetTester tester, {double width = 390}) async {
-  await launch(tester, width: width);
+Future<AuthState> openProject(
+  WidgetTester tester, {
+  double width = 390,
+  Future<http.Response> Function(http.Request)? handleProject,
+}) async {
+  final auth = await launch(tester, width: width, handleProject: handleProject);
   await tester.ensureVisible(find.text('Tambah Project'));
   await tester.tap(find.text('Tambah Project'));
   await tester.pumpAndSettle();
+  return auth;
 }
 
 Future<void> selectDrawer(WidgetTester tester, String label) async {
@@ -69,7 +114,7 @@ Future<void> save(WidgetTester tester) async {
 }
 
 Future<void> closeSummary(WidgetTester tester) async {
-  await tester.tap(find.widgetWithText(FilledButton, 'Tutup'));
+  await tester.tap(find.widgetWithText(TextButton, 'Tutup'));
   await tester.pumpAndSettle();
   expect(find.byType(AlertDialog), findsNothing);
 }
@@ -170,9 +215,7 @@ void main() {
     });
   }
 
-  testWidgets('empty and whitespace fields block the preview dialog', (
-    tester,
-  ) async {
+  testWidgets('empty and whitespace fields prevent saving', (tester) async {
     await openProject(tester);
     for (final whitespace in ['', ' \n ']) {
       if (whitespace.isNotEmpty) {
@@ -224,11 +267,7 @@ void main() {
       await fillRequired(tester, categoryLabel: category.label);
       await save(tester);
       expect(find.byType(AlertDialog), findsOneWidget);
-      expect(find.text('Ringkasan Project'), findsOneWidget);
-      expect(
-        find.text('Preview lokal. Data ini belum dikirim ke Django.'),
-        findsOneWidget,
-      );
+      expect(find.text('Proyek tersimpan'), findsOneWidget);
       expectSummary(tester, 'title', 'Portfolio kampus');
       expectSummary(tester, 'description', 'Menampilkan karya dan pengalaman.');
       expectSummary(tester, 'category', category.label);
@@ -237,11 +276,11 @@ void main() {
       await closeSummary(tester);
       expect(
         tester.widget<TextFormField>(field('title')).controller!.text,
-        '  Portfolio kampus  ',
+        isEmpty,
       );
       expect(
         tester.state<FormFieldState<ProjectCategory>>(field('category')).value,
-        category,
+        isNull,
       );
       expect(tester.takeException(), isNull);
     });
@@ -262,52 +301,265 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  for (final width in [320.0, 1280.0]) {
-    testWidgets('errors and long preview stay usable at 200% text, $width', (
+  void expectRetained(WidgetTester tester) {
+    for (final entry in {
+      'title': '  Portfolio kampus  ',
+      'description': '  Menampilkan karya dan pengalaman.  ',
+      'role': '  Frontend developer  ',
+      'skills': '  Flutter, Dart  ',
+    }.entries) {
+      expect(
+        tester.widget<TextFormField>(field(entry.key)).controller!.text,
+        entry.value,
+      );
+    }
+    expect(
+      tester.state<FormFieldState<ProjectCategory>>(field('category')).value,
+      ProjectCategory.web,
+    );
+  }
+
+  Future<void> completeLogin(WidgetTester tester) async {
+    final username = find.byKey(const ValueKey('login_username'));
+    final password = find.byKey(const ValueKey('login_password'));
+    await tester.ensureVisible(username);
+    await tester.enterText(username, 'test-owner');
+    await tester.ensureVisible(password);
+    await tester.enterText(password, sessionTestToken());
+    final login = find.widgetWithText(FilledButton, 'Login');
+    await tester.ensureVisible(login);
+    await tester.tap(login);
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('confirmed Save uses server data and loads a fresh list', (
+    tester,
+  ) async {
+    final methods = <String>[];
+    late http.Response saved;
+    await launch(
       tester,
-    ) async {
-      tester.platformDispatcher.textScaleFactorTestValue = 2;
-      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
-      await openProject(tester, width: width);
-      await save(tester);
-      for (final message in [
-        'Judul wajib diisi.',
-        'Deskripsi wajib diisi.',
-        'Pilih kategori proyek.',
-        'Peran wajib diisi.',
-        'Keahlian wajib diisi.',
-      ]) {
-        final error = find.text(message);
-        await tester.ensureVisible(error);
-        expect(error.hitTestable(), findsOneWidget);
-        expect(
-          tester.renderObject<RenderParagraph>(error).didExceedMaxLines,
-          isFalse,
+      handleProject: (request) async {
+        methods.add(request.method);
+        if (request.method == 'POST') {
+          saved = savedResponse(request, title: 'Judul dari Django');
+          return saved;
+        }
+        return http.Response.bytes(
+          methods.length == 1
+              ? utf8.encode('[]')
+              : utf8.encode('[${utf8.decode(saved.bodyBytes)}]'),
+          200,
         );
-      }
+      },
+    );
+    await tester.ensureVisible(find.text('Lihat Proyek'));
+    await tester.tap(find.text('Lihat Proyek'));
+    await tester.pumpAndSettle();
+    expect(find.text('Belum ada proyek'), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Tambah Project'));
+    await tester.tap(find.text('Tambah Project'));
+    await tester.pumpAndSettle();
+    await fillRequired(tester);
+    await save(tester);
+    expectSummary(tester, 'title', 'Judul dari Django');
+    await tester.tap(find.text('Lihat daftar proyek'));
+    await tester.pumpAndSettle();
+    expect(find.byType(ProjectListPage), findsOneWidget);
+    expect(find.text('Judul dari Django'), findsOneWidget);
+    expect(methods, ['GET', 'POST', 'GET']);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(find.byType(MyHomePage), findsOneWidget);
+    expect(find.byType(ProjectFormPage, skipOffstage: false), findsNothing);
+    expect(methods, ['GET', 'POST', 'GET']);
+  });
+
+  testWidgets(
+    'Save after session loss preserves the draft if login is cancelled',
+    (tester) async {
+      var posts = 0;
+      final auth = await openProject(
+        tester,
+        handleProject: (request) async {
+          posts++;
+          return savedResponse(request);
+        },
+      );
       await fillRequired(tester);
-      final description = List.filled(
-        60,
-        'Deskripsi proyek yang panjang.',
-      ).join('\n');
-      await enter(tester, 'description', description);
+      auth.invalidateSession(auth.token!);
       await save(tester);
-      expectSummary(tester, 'description', description);
-      expect(find.text('Tutup').hitTestable(), findsOneWidget);
-      final scrollable = find.descendant(
-        of: field('summary_scroll'),
-        matching: find.byType(Scrollable),
+      expect(find.byType(LoginPage), findsOneWidget);
+      await tester.ensureVisible(find.text('Batal'));
+      await tester.tap(find.text('Batal'));
+      await tester.pumpAndSettle();
+      expect(posts, 0);
+      expectRetained(tester);
+      expect(find.byType(ProjectSummaryDialog), findsNothing);
+      await save(tester);
+      await completeLogin(tester);
+      expect(posts, 1);
+      expect(find.byType(ProjectSummaryDialog), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'pending Save disables duplicate submissions and Back; closing success clears input',
+    (tester) async {
+      var posts = 0;
+      final response = Completer<http.Response>();
+      late http.Request sent;
+      await openProject(
+        tester,
+        handleProject: (request) {
+          sent = request;
+          posts++;
+          return response.future;
+        },
       );
-      await tester.scrollUntilVisible(
-        field('summary_skills'),
-        600,
-        scrollable: scrollable,
-        maxScrolls: 100,
-      );
-      expect(field('summary_skills').hitTestable(), findsOneWidget);
-      expect(find.text('Tutup').hitTestable(), findsOneWidget);
-      await closeSummary(tester);
-      expect(tester.takeException(), isNull);
-    });
+      await fillRequired(tester);
+      await tester.ensureVisible(find.text('Save'));
+      await tester.tap(find.text('Save'));
+      await tester.tap(find.text('Save'));
+      await tester.pump();
+      final busy = find.widgetWithText(FilledButton, 'Menyimpan…');
+      expect(tester.widget<FilledButton>(busy).onPressed, isNull);
+      expect(find.byType(LinearProgressIndicator), findsOneWidget);
+      await tester.binding.handlePopRoute();
+      await tester.pump();
+      expect(find.byType(ProjectFormPage), findsOneWidget);
+      expect(posts, 1);
+      response.complete(savedResponse(sent));
+      await tester.pumpAndSettle();
+      expect(find.byType(ProjectSummaryDialog), findsOneWidget);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.byType(ProjectSummaryDialog), findsNothing);
+      await save(tester);
+      expect(posts, 1);
+      expect(find.text('Judul wajib diisi.'), findsOneWidget);
+    },
+  );
+
+  for (final (kind, status, body) in [
+    (ApiFailureKind.validation, 400, '{"title":["INTERNAL"]}'),
+    (
+      ApiFailureKind.forbidden,
+      403,
+      '{"detail":"You do not have permission to perform this action."}',
+    ),
+    (ApiFailureKind.connection, 0, 'INTERNAL'),
+  ]) {
+    testWidgets(
+      '${kind.name} preserves session, input and shows a safe message',
+      (tester) async {
+        final auth = await openProject(
+          tester,
+          handleProject: (_) async {
+            if (status == 0) throw http.ClientException(body);
+            return http.Response(body, status);
+          },
+        );
+        await fillRequired(tester);
+        await save(tester);
+        final error = tester.widget<Text>(field('save_error')).data;
+        expect(
+          error,
+          ApiException(kind, operation: ApiOperation.createProject).message,
+        );
+        expect(error, isNot(contains('INTERNAL')));
+        expect(find.byType(ProjectSummaryDialog), findsNothing);
+        expect(find.byType(LoginPage), findsNothing);
+        expect(auth.isLoggedIn, isTrue);
+        expectRetained(tester);
+      },
+    );
+  }
+
+  for (final (status, body) in [
+    (401, '{}'),
+    (403, '{"detail":"Invalid token."}'),
+  ]) {
+    testWidgets(
+      '$status invalidates local session and re-login never resubmits on its own',
+      (tester) async {
+        final methods = <String>[];
+        final auth = await openProject(
+          tester,
+          handleProject: (request) async {
+            methods.add('${request.method} ${request.url.path}');
+            if (methods.length == 1) return http.Response(body, status);
+            return savedResponse(request);
+          },
+        );
+        await fillRequired(tester);
+        await save(tester);
+        expect(auth.isLoggedIn, isFalse);
+        expectRetained(tester);
+        expect(methods, ['POST /api/v1/projects/']);
+        await tester.ensureVisible(find.text('Login ulang'));
+        await tester.tap(find.text('Login ulang'));
+        await tester.pumpAndSettle();
+        await completeLogin(tester);
+        expect(auth.isLoggedIn, isTrue);
+        expectRetained(tester);
+        expect(methods, ['POST /api/v1/projects/']);
+        await save(tester);
+        expect(find.byType(ProjectSummaryDialog), findsOneWidget);
+        expect(methods, List.filled(2, 'POST /api/v1/projects/'));
+      },
+    );
+  }
+
+  for (final width in [320.0, 1280.0]) {
+    testWidgets(
+      'errors and long confirmation stay usable at 200% text, $width',
+      (tester) async {
+        tester.platformDispatcher.textScaleFactorTestValue = 2;
+        addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+        await openProject(tester, width: width);
+        await save(tester);
+        for (final message in [
+          'Judul wajib diisi.',
+          'Deskripsi wajib diisi.',
+          'Pilih kategori proyek.',
+          'Peran wajib diisi.',
+          'Keahlian wajib diisi.',
+        ]) {
+          final error = find.text(message);
+          await tester.ensureVisible(error);
+          expect(error.hitTestable(), findsOneWidget);
+          expect(
+            tester.renderObject<RenderParagraph>(error).didExceedMaxLines,
+            isFalse,
+          );
+        }
+        await fillRequired(tester);
+        final description = List.filled(
+          60,
+          'Deskripsi proyek yang panjang.',
+        ).join('\n');
+        await enter(tester, 'description', description);
+        await save(tester);
+        expectSummary(tester, 'description', description);
+        expect(find.text('Tutup').hitTestable(), findsOneWidget);
+        final scrollable = find.descendant(
+          of: field('summary_scroll'),
+          matching: find.byType(Scrollable),
+        );
+        await tester.scrollUntilVisible(
+          field('summary_skills'),
+          600,
+          scrollable: scrollable,
+          maxScrolls: 100,
+        );
+        expect(field('summary_skills').hitTestable(), findsOneWidget);
+        expect(find.text('Tutup').hitTestable(), findsOneWidget);
+        await closeSummary(tester);
+        expect(tester.takeException(), isNull);
+      },
+    );
   }
 }

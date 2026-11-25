@@ -3,10 +3,9 @@
 MyPortfolio Mobile adalah aplikasi portofolio Flutter yang dimulai pada Tutorial
 8 PBP, Tugas 7, Tutorial 09, dan Tugas Individu 8 semester 2026/2027 di repositori
 mobile yang sama. Proyek ini terpisah dari portofolio Django. Home memakai data
-statis, sedangkan form Project dan Experience menyiapkan snapshot lokal dan
-menampilkannya dalam dialog ringkasan. Daftar dan detail Project membaca API
-Django pada Tutorial 10. Save belum menyimpan data ke Django dan belum ada
-penyimpanan lintas sesi di aplikasi.
+statis. Daftar dan detail Project membaca API Django, dan Save pada form
+Project menyimpan data ke Django untuk akun superuser. Form Experience
+menampilkan snapshot lokal dalam dialog ringkasan.
 
 Mulai dari [panduan menjalankan aplikasi](#menjalankan-aplikasi), lihat
 [struktur penting](#struktur-penting), atau baca [refleksi Tugas 8](#tugas-8).
@@ -30,8 +29,8 @@ Mulai dari [panduan menjalankan aplikasi](#menjalankan-aplikasi), lihat
   tanggal/waktu UTC. Dialog ringkasan memakai snapshot data valid dan tetap
   mempertahankan isian setelah ditutup.
 - Form Project dengan judul, deskripsi, kategori, peran, dan keahlian yang
-  wajib diisi. Kedua form menampilkan hasil valid dalam `AlertDialog` dengan
-  tombol Tutup untuk kembali ke form.
+  wajib diisi. Setelah Django menyimpan proyek, dialog konfirmasi menampilkan
+  data dari server dan menyediakan akses ke daftar terbaru.
 - Layout responsif untuk layar lebar dan layar sempit.
 - Tema pastel dengan gradient, panel kaca transparan, sudut membulat, dan
   bayangan lembut.
@@ -39,8 +38,7 @@ Mulai dari [panduan menjalankan aplikasi](#menjalankan-aplikasi), lihat
   Kedua font dibundel secara lokal sehingga dapat digunakan tanpa koneksi
   internet.
 
-Login/logout memakai API Django dan sesi dalam memori. Save pada form
-Project maupun Experience hanya memvalidasi dan menampilkan ringkasan lokal.
+Login/logout memakai API Django dan sesi dalam memori.
 
 ## Prasyarat
 
@@ -141,8 +139,7 @@ Dokumentasi resmi Flutter dapat dibaca di
 Tahap ini menambahkan `http`, `provider`, dan `json_annotation`, serta dev
 dependency `build_runner` dan `json_serializable`. Versi hasil resolusi disimpan
 di `pubspec.lock`. GET daftar/detail dijelaskan pada bagian berikutnya.
-Integrasi provider dan login dijelaskan pada bagian autentikasi. Penyimpanan
-proyek ke backend belum diterapkan; Save tetap menampilkan preview lokal.
+Integrasi provider, login, dan Save Project dijelaskan pada bagian berikutnya.
 
 `lib/config/api_config.dart` membaca `API_BASE_URL` melalui deklarasi kompilasi
 `--dart-define`. Nilai default adalah `http://10.0.2.2:8000`, yaitu alamat host
@@ -172,7 +169,7 @@ mengaktifkan HTTP pada manifest main/release. Backend hanya dibaca pada tahap
 ini. Sebelum pengujian jaringan emulator pada tahap integrasi berikutnya,
 konfigurasi development Django perlu mengizinkan host `10.0.2.2` melalui
 `ALLOWED_HOSTS`; konfigurasi backend saat audit belum memuat host tersebut.
-Backend tidak diperlukan untuk menjalankan form preview atau unit test model.
+Preview Experience dan unit test model dapat dijalankan tanpa backend.
 
 `lib/models/project.dart` mendefinisikan `Project` dengan `@JsonSerializable`.
 Model membaca respons JSON datar dengan field `id`, `title`, `description`,
@@ -234,8 +231,8 @@ menampilkan deskripsi penuh, kategori, peran, keahlian, status pilihan,
 apresiasi, pemberi bintang, dan tautan bila valid. Thumbnail kosong/gagal memakai
 fallback. `url_launcher` membuka tautan HTTP/HTTPS; skema lain tidak dijalankan.
 Detail memakai snapshot hasil GET daftar; buka ulang/refresh daftar untuk data
-terbaru. Belum ada POST proyek atau tombol star jaringan. Autentikasi hanya
-dipakai untuk sesi dan guard Tambah Project pada tahap ini.
+terbaru. Dari konfirmasi Save, aksi Lihat daftar proyek membuka daftar
+dengan GET baru.
 
 Untuk mencoba backend lokal, jalankan Django pada terminal PowerShell terpisah:
 
@@ -290,10 +287,8 @@ Logout kembali ke Home dan tetap membersihkan sesi lokal saat server gagal.
 Layar Login memakai panel kaca, highlight tepi, font lokal, dan gradasi pastel
 yang sama. Keyboard dan teks 200% dapat digulir agar field/tombol tetap terjangkau.
 Tidak ada penyimpanan token ke disk, auto-login setelah restart, atau pencatatan
-kredensial. Error hanya memakai pesan aman, tanpa body server. Login tidak
-memberikan hak superuser: backend tetap menentukan izin pada tahap pengiriman
-proyek kelak. Experience dan kedua form tetap preview lokal; tidak ada POST
-Project dan tidak ada perubahan autentikasi backend Experience.
+kredensial. Error memakai pesan aman. Django menentukan siapa yang diizinkan
+menyimpan proyek melalui pemeriksaan superuser.
 
 ```powershell
 flutter test --no-pub test/auth_api_test.dart test/auth_state_test.dart test/auth_widgets_test.dart
@@ -304,7 +299,7 @@ flutter run -d chrome --web-port 3000 --dart-define=API_BASE_URL=http://localhos
 
 Untuk uji manual yang berhasil, isi kredensial sendiri di form Login menggunakan
 akun Django lokal. Jangan memasukkan password/token ke chat, log, atau source.
-Sesudah masuk, periksa perubahan aksi menjadi Logout dan akses preview Project;
+Sesudah masuk, periksa perubahan aksi menjadi Logout dan akses form Project;
 logout lalu periksa bahwa akses tersebut meminta login lagi. Refresh penuh
 browser/hot restart menghapus sesi dalam memori.
 
@@ -318,6 +313,21 @@ belum terverifikasi. Computer-use juga dihentikan otomatis karena URL browser
 Windows tidak dapat dipastikan untuk pemeriksaan kebijakan. Tidak ada
 kredensial nyata yang digunakan atau dicatat.
 
+## Menyimpan Project melalui API
+
+Save mengirim lima isian form yang sudah divalidasi ke `POST /api/v1/projects/`
+dengan token aktif. URL opsional dikirim sebagai string kosong. Selama
+request berlangsung, tombol menampilkan progres dan mencegah submit ganda.
+Respons `201` menampilkan konfirmasi dari data Django, mengosongkan form, dan
+menyediakan aksi **Lihat daftar proyek** untuk memuat ulang daftar.
+
+Isian dipertahankan ketika login dibatalkan atau penyimpanan gagal. Jika
+Django menolak token, sesi lokal dibersihkan. **Login ulang** memulihkan sesi,
+dan pengguna dapat menekan Save kembali. Jika akun tidak punya izin
+superuser, aplikasi menampilkan alasan dan mempertahankan sesi. Jika hasil
+penyimpanan tidak dapat dikonfirmasi karena masalah koneksi atau respons,
+periksa daftar sebelum mencoba menyimpan lagi.
+
 ## Struktur Penting
 
 | Lokasi | Fungsi |
@@ -325,7 +335,7 @@ kredensial nyata yang digunakan atau dicatat.
 | `lib/main.dart` | Entry point `runApp`, `MaterialApp`, tema/font utama, dan pendaftaran named routes kedua form. |
 | `lib/screens/home_page.dart` | Halaman Home, identitas, hero, dan susunan empat kartu aksi. |
 | `lib/screens/experience_form_page.dart` | Halaman Tambah Experience, state isian, validasi, dan aksi Save. |
-| `lib/screens/project_form_page.dart` | Halaman Tambah Project dengan lima input wajib, validasi, dan preview lokal. |
+| `lib/screens/project_form_page.dart` | Halaman Tambah Project dengan lima input wajib, validasi, dan penyimpanan ke Django. |
 | `lib/screens/project_list_page.dart` dan `project_detail_page.dart` | GET publik, status daftar, refresh, dan detail Project. |
 | `lib/services/api_client.dart` | HTTP client yang dapat diinjeksi dan error publik terstruktur. |
 | `lib/auth/auth_state.dart` dan `auth_navigation.dart` | State sesi dalam memori, guard, dan aksi logout. |

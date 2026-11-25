@@ -63,6 +63,15 @@ class AuthState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Drop only the session used by the rejected request, without calling logout.
+  void invalidateSession(String rejectedToken) {
+    if (_disposed || _token != rejectedToken) return;
+    _token = null;
+    _username = null;
+    _failure = null;
+    notifyListeners();
+  }
+
   Future<void> logout() async {
     if (_disposed) return;
     final token = _token;
