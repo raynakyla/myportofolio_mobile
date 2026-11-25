@@ -12,9 +12,11 @@ enum ApiFailureKind {
   connection,
   invalidCredentials,
   invalidToken,
+  validation,
+  forbidden,
 }
 
-enum ApiOperation { projects, login, logout }
+enum ApiOperation { projects, login, logout, createProject }
 
 /// Public error metadata, without response bodies or internal server details.
 class ApiException implements Exception {
@@ -33,17 +35,25 @@ class ApiException implements Exception {
       ApiOperation.projects =>
         'Proyek belum dapat dimuat. Coba lagi beberapa saat.',
       ApiOperation.login => 'Login belum dapat diproses. Silakan coba lagi.',
+      ApiOperation.createProject => 'Proyek belum dapat disimpan. Periksa daftar proyek sebelum mencoba lagi.',
       ApiOperation.logout => 'Pencabutan sesi server belum berhasil. Anda tetap keluar dari aplikasi.',
     },
-    ApiFailureKind.invalidResponse =>
-      operation == ApiOperation.projects
-          ? 'Data proyek belum dapat dibaca. Silakan coba lagi.'
-          : 'Respons autentikasi belum dapat dibaca. Silakan coba lagi.',
+    ApiFailureKind.invalidResponse => switch (operation) {
+      ApiOperation.projects =>
+        'Data proyek belum dapat dibaca. Silakan coba lagi.',
+      ApiOperation.createProject => 'Konfirmasi dari server tidak dapat dibaca. Periksa daftar proyek sebelum mencoba lagi.',
+      _ => 'Respons autentikasi belum dapat dibaca. Silakan coba lagi.',
+    },
     ApiFailureKind.connection =>
-      'Tidak dapat terhubung. Periksa koneksi Anda lalu coba lagi.',
+      operation == ApiOperation.createProject
+          ? 'Penyimpanan belum dapat dikonfirmasi. Periksa koneksi dan daftar proyek sebelum mencoba lagi.'
+          : 'Tidak dapat terhubung. Periksa koneksi Anda lalu coba lagi.',
     ApiFailureKind.invalidCredentials => 'Username atau password tidak cocok.',
     ApiFailureKind.invalidToken =>
       'Sesi tidak valid atau sudah berakhir. Silakan login kembali.',
+    ApiFailureKind.validation =>
+      'Server menolak isian proyek. Periksa kembali data yang Anda masukkan.',
+    ApiFailureKind.forbidden => 'Akun ini tidak memiliki izin menyimpan proyek. Hanya superuser yang dapat menambah proyek.',
   };
 
   @override
@@ -62,7 +72,7 @@ class ApiClient {
   static bool _validToken(String token) =>
       token.length == 40 && RegExp(r'^[a-fA-F0-9]{40}$').hasMatch(token);
 
-  Future<http.Response> _authRequest(
+  Future<http.Response> _request(
     Future<http.Response> Function() send,
     ApiOperation operation,
   ) async {
@@ -76,7 +86,7 @@ class ApiClient {
   }
 
   Future<String> obtainToken(String username, String password) async {
-    final response = await _authRequest(
+    final response = await _request(
       () => _client.post(
         ApiConfig.tokenUri,
         headers: {
@@ -127,7 +137,7 @@ class ApiClient {
         operation: ApiOperation.logout,
       );
     }
-    final response = await _authRequest(
+    final response = await _request(
       () => _client.post(
         ApiConfig.logoutUri,
         headers: {
@@ -156,6 +166,80 @@ class ApiClient {
         ApiFailureKind.invalidResponse,
         operation: ApiOperation.logout,
       );
+    }
+  }
+
+  Future<Project> createProject(Project project, String token) async {
+    const operation = ApiOperation.createProject;
+    if (!_validToken(token)) {
+      throw const ApiException(
+        ApiFailureKind.invalidToken,
+        operation: operation,
+      );
+    }
+    final response = await _request(
+      () => _client.post(
+        ApiConfig.projectsUri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Token $token',
+        },
+        body: jsonEncode(project.toJson()),
+      ),
+      operation,
+    );
+    final statusCode = response.statusCode;
+    if (statusCode != 201) {
+      final kind = switch (statusCode) {
+        400 => ApiFailureKind.validation,
+        401 => ApiFailureKind.invalidToken,
+        403 =>
+          _isAuthenticationRejection(response)
+              ? ApiFailureKind.invalidToken
+              : ApiFailureKind.forbidden,
+        >= 200 && < 300 => ApiFailureKind.invalidResponse,
+        _ => ApiFailureKind.http,
+      };
+      throw ApiException(kind, statusCode: statusCode, operation: operation);
+    }
+
+    final invalidResponse = ApiException(
+      ApiFailureKind.invalidResponse,
+      statusCode: statusCode,
+      operation: operation,
+    );
+    try {
+      final json = jsonDecode(utf8.decode(response.bodyBytes));
+      if (json is! Map<String, dynamic>) throw invalidResponse;
+      final saved = Project.fromJson(json);
+      if (saved.id?.trim().isNotEmpty != true) throw invalidResponse;
+      return saved;
+    } on FormatException {
+      throw invalidResponse;
+    } on CheckedFromJsonException {
+      throw invalidResponse;
+    }
+  }
+
+  // With SessionAuthentication first, DRF can return 403 for invalid tokens.
+  // Only known authentication details justify invalidating the local session.
+  static bool _isAuthenticationRejection(http.Response response) {
+    try {
+      final json = jsonDecode(utf8.decode(response.bodyBytes));
+      if (json is! Map<String, dynamic>) return false;
+      final detail = json['detail'];
+      return detail is String &&
+          const {
+            'Invalid token.',
+            'User inactive or deleted.',
+            'Authentication credentials were not provided.',
+            'Invalid token header. No credentials provided.',
+            'Invalid token header. Token string should not contain spaces.',
+            'Invalid token header. Token string should not contain invalid characters.',
+          }.contains(detail);
+    } on FormatException {
+      return false;
     }
   }
 
