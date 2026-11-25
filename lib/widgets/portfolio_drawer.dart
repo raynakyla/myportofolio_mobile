@@ -1,0 +1,268 @@
+import 'dart:math' as math;
+
+import 'package:flutter/material.dart';
+import 'package:myportofolio_mobile/auth/auth_navigation.dart';
+import 'package:myportofolio_mobile/auth/auth_state.dart';
+import 'package:provider/provider.dart';
+import 'package:myportofolio_mobile/theme/portfolio_colors.dart';
+import 'package:myportofolio_mobile/widgets/portfolio_glass_panel.dart';
+
+enum PortfolioDestination {
+  home('Home', Icons.home_outlined, '/'),
+  experience(
+    'Tambah Experience',
+    Icons.work_outline_rounded,
+    '/experience/add',
+  ),
+  project('Tambah Project', Icons.add_to_photos_outlined, '/project/add'),
+  projects('Lihat Proyek', Icons.folder_outlined, '/projects');
+
+  const PortfolioDestination(this.label, this.icon, this.routeName);
+
+  final String label;
+  final IconData icon;
+  final String routeName;
+}
+
+Future<void> openPortfolioDestination(
+  BuildContext context,
+  PortfolioDestination destination,
+) async {
+  if (destination == PortfolioDestination.project) {
+    if (!await ensureLoggedIn(context) || !context.mounted) return;
+  }
+  if (ModalRoute.of(context)?.settings.name == destination.routeName) return;
+  final navigator = Navigator.of(context);
+  if (destination == PortfolioDestination.home) {
+    navigator.popUntil((route) => route.isFirst);
+  } else {
+    // Keep the original Home beneath one form, including when switching forms.
+    navigator.pushNamedAndRemoveUntil(
+      destination.routeName,
+      (route) => route.isFirst,
+    );
+  }
+}
+
+class PortfolioDrawer extends StatelessWidget {
+  const PortfolioDrawer({super.key, required this.currentDestination});
+
+  final PortfolioDestination currentDestination;
+
+  void _select(BuildContext context, PortfolioDestination destination) {
+    // Close the drawer via Scaffold so this never pops the page underneath it.
+    final scaffold = Scaffold.of(context);
+    final pageContext = scaffold.context;
+    scaffold.closeDrawer();
+    if (destination != currentDestination) {
+      openPortfolioDestination(pageContext, destination);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = context.watch<AuthState?>();
+    return Drawer(
+      width: math.min(320, MediaQuery.sizeOf(context).width * 0.9),
+      backgroundColor: PortfolioColors.cream,
+      surfaceTintColor: Colors.transparent,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.horizontal(right: Radius.circular(28)),
+      ),
+      child: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(20),
+          children: [
+            Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Rayna.',
+                    style: TextStyle(
+                      fontFamily: 'Playfair Display',
+                      fontSize: 26,
+                      fontWeight: FontWeight.w600,
+                      fontStyle: FontStyle.italic,
+                      color: PortfolioColors.mauve,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Tutup navigasi',
+                  constraints: const BoxConstraints(
+                    minWidth: 48,
+                    minHeight: 48,
+                  ),
+                  onPressed: () => Scaffold.of(context).closeDrawer(),
+                  icon: const Icon(Icons.close_rounded),
+                  color: PortfolioColors.ink,
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            PortfolioGlassPanel(
+              padding: const EdgeInsets.all(20),
+              borderRadius: BorderRadius.circular(22),
+              child: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'MyPortfolio',
+                    style: TextStyle(
+                      fontFamily: 'Playfair Display',
+                      fontSize: 24,
+                      fontWeight: FontWeight.w600,
+                      color: PortfolioColors.ink,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Ruang untuk cerita dan pengalaman.',
+                    style: TextStyle(color: PortfolioColors.muted, height: 1.5),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 32),
+            const Padding(
+              padding: EdgeInsets.only(left: 12, bottom: 12),
+              child: Text(
+                'JELAJAHI',
+                style: TextStyle(
+                  color: PortfolioColors.muted,
+                  fontSize: 11,
+                  letterSpacing: 1.8,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            for (final destination in PortfolioDestination.values)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: _DestinationTile(
+                  destination: destination,
+                  selected: destination == currentDestination,
+                  onTap: () => _select(context, destination),
+                ),
+              ),
+            if (auth != null) ...[
+              const Divider(height: 28, color: PortfolioColors.line),
+              ListTile(
+                key: const ValueKey('drawer_session_action'),
+                minTileHeight: 64,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                focusColor: PortfolioColors.lavender,
+                textColor: PortfolioColors.roseInk,
+                iconColor: PortfolioColors.roseInk,
+                leading: Icon(
+                  auth.isLoggedIn ? Icons.logout_rounded : Icons.login_rounded,
+                ),
+                title: Text(
+                  auth.isLoggedIn ? 'Logout' : 'Login',
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+                onTap: auth.isBusy
+                    ? null
+                    : () {
+                        final scaffold = Scaffold.of(context);
+                        final pageContext = scaffold.context;
+                        scaffold.closeDrawer();
+                        if (auth.isLoggedIn) {
+                          logoutAndReturnHome(pageContext);
+                        } else {
+                          ensureLoggedIn(pageContext);
+                        }
+                      },
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DestinationTile extends StatelessWidget {
+  const _DestinationTile({
+    required this.destination,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final PortfolioDestination destination;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final radius = BorderRadius.circular(18);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: radius,
+        gradient: selected
+            ? const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFFFFF8FC),
+                  PortfolioColors.pink,
+                  Color(0xFFF7E4ED),
+                ],
+                stops: [0, 0.55, 1],
+              )
+            : null,
+        border: Border.all(
+          color: selected ? PortfolioColors.mauve : PortfolioColors.line,
+        ),
+        boxShadow: selected
+            ? const [
+                BoxShadow(
+                  color: Color(0x1689536C),
+                  blurRadius: 16,
+                  offset: Offset(0, 5),
+                ),
+              ]
+            : null,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: radius),
+        clipBehavior: Clip.antiAlias,
+        child: ListTile(
+          selected: selected,
+          minTileHeight: 64,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 4,
+          ),
+          shape: RoundedRectangleBorder(borderRadius: radius),
+          textColor: PortfolioColors.ink,
+          iconColor: PortfolioColors.ink,
+          selectedColor: PortfolioColors.roseInk,
+          focusColor: PortfolioColors.roseInk.withValues(alpha: 0.18),
+          hoverColor: PortfolioColors.roseInk.withValues(alpha: 0.10),
+          leading: Icon(destination.icon),
+          title: Text(
+            destination.label,
+            style: const TextStyle(fontWeight: FontWeight.w700, height: 1.4),
+          ),
+          trailing: selected
+              ? const DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: PortfolioColors.yellow,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.all(4),
+                    child: Icon(Icons.check_rounded, size: 18),
+                  ),
+                )
+              : null,
+          onTap: onTap,
+        ),
+      ),
+    );
+  }
+}
