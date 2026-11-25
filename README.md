@@ -61,7 +61,7 @@ ikuti langkah Android opsional di bawah jika toolchain belum dikonfigurasi.
 
 ## Menjalankan Aplikasi
 
-Buka **Command Prompt (CMD)** di Windows. Semua blok perintah berikut bisa
+Buka **Command Prompt (CMD)** di Windows. Blok perintah pada bagian ini bisa
 disalin ke CMD; contoh clone menggunakan folder pengguna agar tidak bergantung
 pada lokasi proyek di komputer saya.
 
@@ -135,6 +135,71 @@ pengujian langsung pada Android belum diverifikasi dalam tahap dokumentasi ini.
 Dokumentasi resmi Flutter dapat dibaca di
 [docs.flutter.dev](https://docs.flutter.dev/).
 
+## Fondasi Tutorial 10: Dependensi, URL API, dan Model Project
+
+Tahap ini menambahkan `http`, `provider`, dan `json_annotation`, serta dev
+dependency `build_runner` dan `json_serializable`. Versi hasil resolusi disimpan
+di `pubspec.lock`. Belum ada request jaringan, pemasangan provider pada widget,
+login, atau penyimpanan ke backend. Save tetap menampilkan preview lokal.
+
+`lib/config/api_config.dart` membaca `API_BASE_URL` melalui deklarasi kompilasi
+`--dart-define`. Nilai default adalah `http://10.0.2.2:8000`, yaitu alamat host
+komputer dari emulator Android. Nilai ini berisi origin backend, tanpa
+`/api/v1/`; `ApiConfig.projectsUri` membentuk `/api/v1/projects/`.
+
+Contoh berikut menggunakan **PowerShell Windows** dari direktori repo Flutter:
+
+```powershell
+Set-Location C:\myportofolio_mobile
+flutter pub get
+# Pilih ID emulator dari flutter devices; emulator-5554 hanya contoh.
+flutter devices
+flutter run -d emulator-5554
+# Untuk Chrome, gunakan localhost dan port web tetap sesuai CORS backend.
+flutter run -d chrome --web-port 3000 --dart-define=API_BASE_URL=http://localhost:8000
+```
+
+Hentikan proses `flutter run` sebelumnya dengan `q` sebelum memilih target lain.
+Perubahan `--dart-define` memerlukan run/build ulang. Deklarasi ini mengikuti
+[konfigurasi kompilasi Dart](https://dart.dev/libraries/core/environment-declarations).
+Origin bukan kredensial; jangan menaruh token atau password di deklarasi ini.
+
+Manifest Android debug sudah memiliki izin `INTERNET`; HTTP lokal diizinkan
+melalui `usesCleartextTraffic` hanya pada manifest debug. Konfigurasi ini tidak
+mengaktifkan HTTP pada manifest main/release. Backend hanya dibaca pada tahap
+ini. Sebelum pengujian jaringan emulator pada tahap integrasi berikutnya,
+konfigurasi development Django perlu mengizinkan host `10.0.2.2` melalui
+`ALLOWED_HOSTS`; konfigurasi backend saat audit belum memuat host tersebut.
+Backend tidak diperlukan untuk menjalankan form preview atau unit test model.
+
+`lib/models/project.dart` mendefinisikan `Project` dengan `@JsonSerializable`.
+Model membaca respons JSON datar dengan field `id`, `title`, `description`,
+`category`, `role`, `skills`, `thumbnail`, `project_url`, `is_featured`,
+`star_count`, `is_starred`, dan `starred_by_names`. `ProjectCategory` tetap
+diimpor dari `project_data.dart`, dengan nilai `web`, `product`, dan `creative`.
+`ProjectDraft`, form, dialog, dan navigasi tidak diganti oleh model API ini.
+
+`Project.toJson()` hanya menghasilkan delapan field input serializer. `id`,
+`star_count`, `is_starred`, dan `starred_by_names` dibaca dari respons tetapi
+dikecualikan dari body POST melalui `JsonKey(includeToJson: false)`. URL kosong
+atau null dinormalisasi menjadi string kosong karena backend menerima URL
+kosong, bukan null. Field opsional yang hilang/null memakai default: URL dan
+nama pemberi star `''`, flag `false`, jumlah star `0`, serta `id` nullable.
+Field wajib dan kategori yang tidak valid tetap ditolak saat parsing. Pemetaan
+ini mengikuti [dokumentasi JsonKey](https://pub.dev/documentation/json_annotation/latest/json_annotation/JsonKey-class.html).
+
+File hasil generate `lib/models/project.g.dart` **ikut di-commit** dan tidak
+diabaikan oleh Git. Setelah clone, `flutter pub get` cukup untuk menyiapkan
+dependensi sebelum menjalankan aplikasi. Setelah mengubah model atau anotasi,
+generate ulang lalu commit source dan hasil generate bersama:
+
+```powershell
+dart run build_runner build
+dart format lib/config/api_config.dart lib/models/project.dart lib/models/project.g.dart test/project_model_test.dart
+flutter analyze --no-pub
+flutter test --no-pub
+```
+
 ## Struktur Penting
 
 | Lokasi | Fungsi |
@@ -145,6 +210,8 @@ Dokumentasi resmi Flutter dapat dibaca di
 | `lib/screens/project_form_page.dart` | Halaman Tambah Project dengan lima input wajib, validasi, dan preview lokal. |
 | `lib/models/experience_data.dart` | `ExperienceDraft` dan `ExperienceCategory` untuk snapshot lokal serta kategori pengalaman. |
 | `lib/models/project_data.dart` | `ProjectDraft` dan `ProjectCategory` untuk snapshot lokal serta kategori proyek. |
+| `lib/models/project.dart` dan `project.g.dart` | Model JSON API Project; source anotasi dan hasil generator yang ikut Git. |
+| `lib/config/api_config.dart` | Origin backend dari `API_BASE_URL` serta URI endpoint Project. |
 | `lib/widgets/portfolio_action_card.dart` | `ItemCard` dan metadata `ItemHomepage`, termasuk callback navigasi atau SnackBar. |
 | `lib/widgets/portfolio_drawer.dart` | Drawer bersama, daftar tujuan, dan helper navigasi tanpa duplikasi Home/form. |
 | `lib/widgets/experience_summary_dialog.dart` | `AlertDialog` ringkasan Experience valid, dengan isi yang bisa digulir. |
@@ -157,14 +224,15 @@ Dokumentasi resmi Flutter dapat dibaca di
 | `test/widget_test.dart` | Tes Home, SnackBar, navigasi kartu/drawer, Back, dan layout responsif. |
 | `test/experience_form_test.dart` | Tes validasi, snapshot ringkasan, retensi isian, scroll panjang, dan inset keyboard. |
 | `test/project_form_test.dart` | Tes akses Project dari Home/drawer, validasi, dialog, kembali ke Home, dan layout. |
+| `test/project_model_test.dart` | Tes kontrak respons/input API, kategori, default null, dan pengecualian field server dari POST. |
 | `pubspec.yaml` | Mendefinisikan metadata proyek, dependency, dan registrasi aset font beserta weight yang digunakan. |
 
 Di bawah `lib/`, `screens/` mengelompokkan halaman, `widgets/` menyimpan
 komponen antarmuka bersama, `models/` menyimpan data tanpa dependensi widget
 Flutter, dan `theme/` menyimpan palet. `test/` berisi widget test. Font TTF dan
 `OFL.txt` berada di `assets/fonts/dm_sans/` serta
-`assets/fonts/playfair_display/`. Tabel ini tidak memasukkan file hasil generate
-atau build.
+`assets/fonts/playfair_display/`. Tabel ini mencantumkan `project.g.dart` karena
+hasil generator tersebut ikut di-commit; artefak build tidak dicantumkan.
 
 Pada Tutorial 9 tahap 5, `menu.dart` dipindah menjadi `screens/home_page.dart`,
 dan `portfolio_style.dart` dipisah menjadi palet warna serta widget panel glass.
