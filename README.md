@@ -21,9 +21,9 @@ Mulai dari [panduan menjalankan aplikasi](#menjalankan-aplikasi), lihat
 
 - Tiga kartu informasi terpisah untuk nama, NPM, dan kelas.
 - Empat tombol menu: **Lihat Proyek**, **Tambah Experience**, **Tambah Project**,
-  dan **Logout**.
-- Lihat Proyek membuka daftar dari backend dan detail karya; Logout tetap
-  berupa SnackBar. Kedua aksi Tambah membuka form masing-masing.
+  dan **Login/Logout**, mengikuti status sesi.
+- Lihat Proyek membuka daftar/detail publik. Tambah Project meminta login;
+  Tambah Experience tetap membuka preview lokal tanpa login.
 - Drawer bersama berisi Home, Lihat Proyek, Tambah Experience, dan Tambah Project, dengan
   navigasi tanpa menumpuk salinan halaman.
 - Form Experience dengan validasi, kategori sesuai model Django lokal, dan
@@ -39,7 +39,7 @@ Mulai dari [panduan menjalankan aplikasi](#menjalankan-aplikasi), lihat
   Kedua font dibundel secara lokal sehingga dapat digunakan tanpa koneksi
   internet.
 
-Autentikasi/logout jaringan belum diimplementasikan. Save pada form
+Login/logout memakai API Django dan sesi dalam memori. Save pada form
 Project maupun Experience hanya memvalidasi dan menampilkan ringkasan lokal.
 
 ## Prasyarat
@@ -141,8 +141,8 @@ Dokumentasi resmi Flutter dapat dibaca di
 Tahap ini menambahkan `http`, `provider`, dan `json_annotation`, serta dev
 dependency `build_runner` dan `json_serializable`. Versi hasil resolusi disimpan
 di `pubspec.lock`. GET daftar/detail dijelaskan pada bagian berikutnya.
-Pemasangan provider pada widget, login, dan penyimpanan ke backend belum
-diterapkan. Save tetap menampilkan preview lokal.
+Integrasi provider dan login dijelaskan pada bagian autentikasi. Penyimpanan
+proyek ke backend belum diterapkan; Save tetap menampilkan preview lokal.
 
 `lib/config/api_config.dart` membaca `API_BASE_URL` melalui deklarasi kompilasi
 `--dart-define`. Nilai default adalah `http://10.0.2.2:8000`, yaitu alamat host
@@ -234,7 +234,8 @@ menampilkan deskripsi penuh, kategori, peran, keahlian, status pilihan,
 apresiasi, pemberi bintang, dan tautan bila valid. Thumbnail kosong/gagal memakai
 fallback. `url_launcher` membuka tautan HTTP/HTTPS; skema lain tidak dijalankan.
 Detail memakai snapshot hasil GET daftar; buka ulang/refresh daftar untuk data
-terbaru. Belum ada operasi POST, autentikasi, atau tombol star jaringan.
+terbaru. Belum ada POST proyek atau tombol star jaringan. Autentikasi hanya
+dipakai untuk sesi dan guard Tambah Project pada tahap ini.
 
 Untuk mencoba backend lokal, jalankan Django pada terminal PowerShell terpisah:
 
@@ -266,7 +267,7 @@ error/retry, pull-to-refresh, teks 200%, serta kegagalan launcher diuji secara
 otomatis. Tautan eksternal belum dibuka dalam uji manual, dan build Android
 serta Windows desktop belum diuji.
 
-## Struktur Penting
+## Autentikasi Tutorial 10
 
 Fondasi sesi Tutorial 10 menyediakan `ApiClient.obtainToken(username, password)`
 dan `logout(token)`, dengan JSON login, header Token untuk logout, serta validasi
@@ -277,6 +278,48 @@ Token hanya disimpan dalam memori dan hilang saat aplikasi dimulai ulang.
 Logout segera membersihkan state lokal walaupun pencabutan server gagal.
 Pembatalan login mengabaikan respons yang datang belakangan.
 
+`LoginPage` memvalidasi field wajib, menyembunyikan password, menonaktifkan
+submit selama request, dan menampilkan indikator serta error ramah. Login yang
+berhasil mengembalikan `true`; Batal/Back mengembalikan hasil gagal tanpa
+membuka form tujuan. `ensureLoggedIn(context)` langsung berhasil untuk sesi
+aktif, atau menunggu hasil layar Login. Semua akses Tambah Project dari Home
+dan drawer menggunakan guard yang sama. Penutupan drawer memakai Scaffold,
+bukan pop halaman. Home dan drawer menampilkan Login/Logout secara reaktif.
+Logout kembali ke Home dan tetap membersihkan sesi lokal saat server gagal.
+
+Layar Login memakai panel kaca, highlight tepi, font lokal, dan gradasi pastel
+yang sama. Keyboard dan teks 200% dapat digulir agar field/tombol tetap terjangkau.
+Tidak ada penyimpanan token ke disk, auto-login setelah restart, atau pencatatan
+kredensial. Error hanya memakai pesan aman, tanpa body server. Login tidak
+memberikan hak superuser: backend tetap menentukan izin pada tahap pengiriman
+proyek kelak. Experience dan kedua form tetap preview lokal; tidak ada POST
+Project dan tidak ada perubahan autentikasi backend Experience.
+
+```powershell
+flutter test --no-pub test/auth_api_test.dart test/auth_state_test.dart test/auth_widgets_test.dart
+flutter analyze --no-pub
+flutter test --no-pub
+flutter run -d chrome --web-port 3000 --dart-define=API_BASE_URL=http://localhost:8000
+```
+
+Untuk uji manual yang berhasil, isi kredensial sendiri di form Login menggunakan
+akun Django lokal. Jangan memasukkan password/token ke chat, log, atau source.
+Sesudah masuk, periksa perubahan aksi menjadi Logout dan akses preview Project;
+logout lalu periksa bahwa akses tersebut meminta login lagi. Refresh penuh
+browser/hot restart menghapus sesi dalam memori.
+
+Verifikasi autentikasi: format dan analyzer bersih; seluruh 111 tes lulus,
+termasuk 23 tes API/state dan 15 tes widget autentikasi baru. Login berhasil,
+gagal, dibatalkan saat request berjalan, guard Home/drawer, perubahan aksi sesi,
+logout gagal, serta layout 200% dengan ruang keyboard diuji otomatis. Django
+lokal berhasil berjalan; peluncuran Flutter Chrome pada port 3000 dicoba,
+tetapi koneksi web debug service berakhir dengan timeout. Login/logout manual
+belum terverifikasi. Computer-use juga dihentikan otomatis karena URL browser
+Windows tidak dapat dipastikan untuk pemeriksaan kebijakan. Tidak ada
+kredensial nyata yang digunakan atau dicatat.
+
+## Struktur Penting
+
 | Lokasi | Fungsi |
 | --- | --- |
 | `lib/main.dart` | Entry point `runApp`, `MaterialApp`, tema/font utama, dan pendaftaran named routes kedua form. |
@@ -285,6 +328,8 @@ Pembatalan login mengabaikan respons yang datang belakangan.
 | `lib/screens/project_form_page.dart` | Halaman Tambah Project dengan lima input wajib, validasi, dan preview lokal. |
 | `lib/screens/project_list_page.dart` dan `project_detail_page.dart` | GET publik, status daftar, refresh, dan detail Project. |
 | `lib/services/api_client.dart` | HTTP client yang dapat diinjeksi dan error publik terstruktur. |
+| `lib/auth/auth_state.dart` dan `auth_navigation.dart` | State sesi dalam memori, guard, dan aksi logout. |
+| `lib/screens/login_page.dart` | Form login dengan validasi, indikator, retry, dan pembatalan. |
 | `lib/widgets/project_card.dart` dan `project_thumbnail.dart` | Kartu kaca, kategori/status pilihan, thumbnail dan fallback. |
 | `lib/models/experience_data.dart` | `ExperienceDraft` dan `ExperienceCategory` untuk snapshot lokal serta kategori pengalaman. |
 | `lib/models/project_data.dart` | `ProjectDraft` dan `ProjectCategory` untuk snapshot lokal serta kategori proyek. |
@@ -304,6 +349,7 @@ Pembatalan login mengabaikan respons yang datang belakangan.
 | `test/project_form_test.dart` | Tes akses Project dari Home/drawer, validasi, dialog, kembali ke Home, dan layout. |
 | `test/project_model_test.dart` | Tes kontrak respons/input API, kategori, default null, dan pengecualian field server dari POST. |
 | `test/api_client_test.dart` dan `project_pages_test.dart` | Tes HTTP dengan MockClient, status layar, navigasi, refresh, link, dan aksesibilitas layout. |
+| `test/auth_api_test.dart`, `auth_state_test.dart`, dan `auth_widgets_test.dart` | Tes kontrak token, siklus sesi, provider, login, guard, dan logout gagal. |
 | `pubspec.yaml` | Mendefinisikan metadata proyek, dependency, dan registrasi aset font beserta weight yang digunakan. |
 
 Di bawah `lib/`, `screens/` mengelompokkan halaman, `widgets/` menyimpan

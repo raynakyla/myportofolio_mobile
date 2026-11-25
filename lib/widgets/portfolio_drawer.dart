@@ -1,6 +1,9 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:myportofolio_mobile/auth/auth_navigation.dart';
+import 'package:myportofolio_mobile/auth/auth_state.dart';
+import 'package:provider/provider.dart';
 import 'package:myportofolio_mobile/theme/portfolio_colors.dart';
 import 'package:myportofolio_mobile/widgets/portfolio_glass_panel.dart';
 
@@ -21,10 +24,13 @@ enum PortfolioDestination {
   final String routeName;
 }
 
-void openPortfolioDestination(
+Future<void> openPortfolioDestination(
   BuildContext context,
   PortfolioDestination destination,
-) {
+) async {
+  if (destination == PortfolioDestination.project) {
+    if (!await ensureLoggedIn(context) || !context.mounted) return;
+  }
   if (ModalRoute.of(context)?.settings.name == destination.routeName) return;
   final navigator = Navigator.of(context);
   if (destination == PortfolioDestination.home) {
@@ -45,14 +51,17 @@ class PortfolioDrawer extends StatelessWidget {
 
   void _select(BuildContext context, PortfolioDestination destination) {
     // Close the drawer via Scaffold so this never pops the page underneath it.
-    Scaffold.of(context).closeDrawer();
+    final scaffold = Scaffold.of(context);
+    final pageContext = scaffold.context;
+    scaffold.closeDrawer();
     if (destination != currentDestination) {
-      openPortfolioDestination(context, destination);
+      openPortfolioDestination(pageContext, destination);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthState?>();
     return Drawer(
       width: math.min(320, MediaQuery.sizeOf(context).width * 0.9),
       backgroundColor: PortfolioColors.cream,
@@ -136,6 +145,38 @@ class PortfolioDrawer extends StatelessWidget {
                   onTap: () => _select(context, destination),
                 ),
               ),
+            if (auth != null) ...[
+              const Divider(height: 28, color: PortfolioColors.line),
+              ListTile(
+                key: const ValueKey('drawer_session_action'),
+                minTileHeight: 64,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                focusColor: PortfolioColors.lavender,
+                textColor: PortfolioColors.roseInk,
+                iconColor: PortfolioColors.roseInk,
+                leading: Icon(
+                  auth.isLoggedIn ? Icons.logout_rounded : Icons.login_rounded,
+                ),
+                title: Text(
+                  auth.isLoggedIn ? 'Logout' : 'Login',
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+                onTap: auth.isBusy
+                    ? null
+                    : () {
+                        final scaffold = Scaffold.of(context);
+                        final pageContext = scaffold.context;
+                        scaffold.closeDrawer();
+                        if (auth.isLoggedIn) {
+                          logoutAndReturnHome(pageContext);
+                        } else {
+                          ensureLoggedIn(pageContext);
+                        }
+                      },
+              ),
+            ],
           ],
         ),
       ),

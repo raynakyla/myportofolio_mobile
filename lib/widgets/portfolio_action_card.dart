@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:myportofolio_mobile/auth/auth_navigation.dart';
+import 'package:myportofolio_mobile/auth/auth_state.dart';
+import 'package:provider/provider.dart';
 import 'package:myportofolio_mobile/theme/portfolio_colors.dart';
 import 'package:myportofolio_mobile/widgets/portfolio_drawer.dart';
 
@@ -20,6 +23,14 @@ class ItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthState>();
+    final sessionAction = item.name == 'Logout';
+    final label = sessionAction
+        ? (auth.isLoggedIn ? 'Logout' : 'Login')
+        : item.name;
+    final icon = sessionAction && !auth.isLoggedIn
+        ? Icons.login_rounded
+        : item.icon;
     final isNarrow = MediaQuery.sizeOf(context).width < _compactWidth;
     final radius = BorderRadius.circular(20);
 
@@ -71,29 +82,40 @@ class ItemCard extends StatelessWidget {
             return Colors.transparent;
           }),
         ),
-        onPressed: () {
-          final messenger = ScaffoldMessenger.of(context);
-          messenger.removeCurrentSnackBar();
-          if (item.name == 'Lihat Proyek') {
-            openPortfolioDestination(context, PortfolioDestination.projects);
-            return;
-          }
-          if (item.name == 'Tambah Experience') {
-            openPortfolioDestination(context, PortfolioDestination.experience);
-            return;
-          }
-          if (item.name == 'Tambah Project') {
-            openPortfolioDestination(context, PortfolioDestination.project);
-            return;
-          }
-          messenger.showSnackBar(
-            SnackBar(
-              behavior: SnackBarBehavior.floating,
-              backgroundColor: PortfolioColors.ink,
-              content: Text('Kamu telah menekan tombol ${item.name}!'),
-            ),
-          );
-        },
+        onPressed: sessionAction && auth.isBusy
+            ? null
+            : () {
+                final messenger = ScaffoldMessenger.of(context);
+                messenger.removeCurrentSnackBar();
+                if (item.name == 'Lihat Proyek') {
+                  openPortfolioDestination(
+                    context,
+                    PortfolioDestination.projects,
+                  );
+                  return;
+                }
+                if (item.name == 'Tambah Experience') {
+                  openPortfolioDestination(
+                    context,
+                    PortfolioDestination.experience,
+                  );
+                  return;
+                }
+                if (item.name == 'Tambah Project') {
+                  openPortfolioDestination(
+                    context,
+                    PortfolioDestination.project,
+                  );
+                  return;
+                }
+                if (sessionAction) {
+                  if (auth.isLoggedIn) {
+                    logoutAndReturnHome(context);
+                  } else {
+                    ensureLoggedIn(context);
+                  }
+                }
+              },
         child: Row(
           children: [
             Container(
@@ -104,12 +126,12 @@ class ItemCard extends StatelessWidget {
                 border: Border.all(color: Colors.white.withValues(alpha: 0.88)),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(item.icon, color: item.accentInk, size: 24),
+              child: Icon(icon, color: item.accentInk, size: 24),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                item.name,
+                label,
                 style: const TextStyle(
                   color: PortfolioColors.ink,
                   fontSize: 15,

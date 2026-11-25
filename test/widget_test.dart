@@ -35,18 +35,22 @@ void main() {
     expect(find.text('Lihat Proyek'), findsOneWidget);
     expect(find.text('Tambah Experience'), findsOneWidget);
     expect(find.text('Tambah Project'), findsOneWidget);
-    expect(find.text('Logout'), findsOneWidget);
+    expect(find.text('Login'), findsOneWidget);
     expect(find.byType(ItemCard), findsNWidgets(4));
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Logout retains its existing SnackBar action', (tester) async {
+  testWidgets('Login cancellation keeps the original Home', (tester) async {
     await tester.pumpWidget(const MyApp());
-
-    await tester.ensureVisible(find.text('Logout'));
-    await tester.tap(find.text('Logout'));
-    await tester.pump();
-    expect(find.text('Kamu telah menekan tombol Logout!'), findsOneWidget);
+    final home = tester.element(find.byType(MyHomePage));
+    await tester.ensureVisible(find.text('Login'));
+    await tester.tap(find.text('Login'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('login_username')), findsOneWidget);
+    await tester.ensureVisible(find.text('Batal'));
+    await tester.tap(find.text('Batal'));
+    await tester.pumpAndSettle();
+    expect(tester.element(find.byType(MyHomePage)), same(home));
   });
 
   testWidgets('fits a narrow viewport without overflow', (tester) async {
@@ -61,7 +65,7 @@ void main() {
     expect(find.text('Lihat Proyek'), findsOneWidget);
     expect(find.text('Tambah Experience'), findsOneWidget);
     expect(find.text('Tambah Project'), findsOneWidget);
-    expect(find.text('Logout'), findsOneWidget);
+    expect(find.text('Login'), findsOneWidget);
   });
 
   for (final width in [320.0, 390.0]) {

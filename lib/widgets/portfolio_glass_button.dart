@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:myportofolio_mobile/theme/portfolio_colors.dart';
 
 /// A shared glass action with a visible focus ring and pressed feedback.
@@ -13,7 +14,7 @@ class PortfolioGlassButton extends StatefulWidget {
 
   final String label;
   final IconData icon;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   @override
   State<PortfolioGlassButton> createState() => _PortfolioGlassButtonState();
@@ -21,10 +22,36 @@ class PortfolioGlassButton extends StatefulWidget {
 
 class _PortfolioGlassButtonState extends State<PortfolioGlassButton> {
   final _states = WidgetStatesController();
+  final _visualRevision = ValueNotifier<int>(0);
+  bool _rebuildScheduled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _states.addListener(_syncVisualState);
+  }
+
+  void _syncVisualState() {
+    // Buttons update disabled state during build. Defer only those notifications;
+    // pointer and keyboard feedback can still rebuild immediately between frames.
+    if (SchedulerBinding.instance.schedulerPhase ==
+        SchedulerPhase.persistentCallbacks) {
+      if (_rebuildScheduled) return;
+      _rebuildScheduled = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _rebuildScheduled = false;
+        if (mounted) _visualRevision.value++;
+      });
+    } else {
+      _visualRevision.value++;
+    }
+  }
 
   @override
   void dispose() {
+    _states.removeListener(_syncVisualState);
     _states.dispose();
+    _visualRevision.dispose();
     super.dispose();
   }
 
@@ -32,7 +59,7 @@ class _PortfolioGlassButtonState extends State<PortfolioGlassButton> {
   Widget build(BuildContext context) {
     final radius = BorderRadius.circular(18);
     return ListenableBuilder(
-      listenable: _states,
+      listenable: _visualRevision,
       builder: (context, child) {
         final pressed = _states.value.contains(WidgetState.pressed);
         final focused = _states.value.contains(WidgetState.focused);

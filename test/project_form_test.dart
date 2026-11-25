@@ -9,6 +9,8 @@ import 'package:myportofolio_mobile/screens/home_page.dart';
 import 'package:myportofolio_mobile/screens/project_form_page.dart';
 import 'package:myportofolio_mobile/widgets/project_summary_dialog.dart';
 
+import 'support/auth_test_support.dart';
+
 Finder field(String name) => find.byKey(ValueKey('project_$name'));
 
 Future<void> launch(WidgetTester tester, {double width = 390}) async {
@@ -16,7 +18,7 @@ Future<void> launch(WidgetTester tester, {double width = 390}) async {
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
-  await tester.pumpWidget(const MyApp());
+  await tester.pumpWidget(MyApp(authState: await signedInTestAuth()));
 }
 
 Future<void> openProject(WidgetTester tester, {double width = 390}) async {
