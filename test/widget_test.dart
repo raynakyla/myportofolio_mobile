@@ -40,22 +40,13 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('shows the selected menu item in a SnackBar', (tester) async {
+  testWidgets('Logout retains its existing SnackBar action', (tester) async {
     await tester.pumpWidget(const MyApp());
-
-    await tester.ensureVisible(find.text('Lihat Proyek'));
-    await tester.tap(find.text('Lihat Proyek'));
-    await tester.pump();
-    expect(
-      find.text('Kamu telah menekan tombol Lihat Proyek!'),
-      findsOneWidget,
-    );
 
     await tester.ensureVisible(find.text('Logout'));
     await tester.tap(find.text('Logout'));
     await tester.pump();
     expect(find.text('Kamu telah menekan tombol Logout!'), findsOneWidget);
-    expect(find.text('Kamu telah menekan tombol Lihat Proyek!'), findsNothing);
   });
 
   testWidgets('fits a narrow viewport without overflow', (tester) async {

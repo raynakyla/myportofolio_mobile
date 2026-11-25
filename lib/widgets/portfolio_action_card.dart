@@ -74,6 +74,10 @@ class ItemCard extends StatelessWidget {
         onPressed: () {
           final messenger = ScaffoldMessenger.of(context);
           messenger.removeCurrentSnackBar();
+          if (item.name == 'Lihat Proyek') {
+            openPortfolioDestination(context, PortfolioDestination.projects);
+            return;
+          }
           if (item.name == 'Tambah Experience') {
             openPortfolioDestination(context, PortfolioDestination.experience);
             return;

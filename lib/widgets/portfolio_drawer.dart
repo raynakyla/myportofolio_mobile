@@ -11,7 +11,8 @@ enum PortfolioDestination {
     Icons.work_outline_rounded,
     '/experience/add',
   ),
-  project('Tambah Project', Icons.add_to_photos_outlined, '/project/add');
+  project('Tambah Project', Icons.add_to_photos_outlined, '/project/add'),
+  projects('Lihat Proyek', Icons.folder_outlined, '/projects');
 
   const PortfolioDestination(this.label, this.icon, this.routeName);
 

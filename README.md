@@ -4,8 +4,9 @@ MyPortfolio Mobile adalah aplikasi portofolio Flutter yang dimulai pada Tutorial
 8 PBP, Tugas 7, Tutorial 09, dan Tugas Individu 8 semester 2026/2027 di repositori
 mobile yang sama. Proyek ini terpisah dari portofolio Django. Home memakai data
 statis, sedangkan form Project dan Experience menyiapkan snapshot lokal dan
-menampilkannya dalam dialog ringkasan. Save belum menyimpan data ke Django;
-belum ada koneksi API atau penyimpanan lintas sesi.
+menampilkannya dalam dialog ringkasan. Daftar dan detail Project membaca API
+Django pada Tutorial 10. Save belum menyimpan data ke Django dan belum ada
+penyimpanan lintas sesi di aplikasi.
 
 Mulai dari [panduan menjalankan aplikasi](#menjalankan-aplikasi), lihat
 [struktur penting](#struktur-penting), atau baca [refleksi Tugas 8](#tugas-8).
@@ -21,9 +22,9 @@ Mulai dari [panduan menjalankan aplikasi](#menjalankan-aplikasi), lihat
 - Tiga kartu informasi terpisah untuk nama, NPM, dan kelas.
 - Empat tombol menu: **Lihat Proyek**, **Tambah Experience**, **Tambah Project**,
   dan **Logout**.
-- SnackBar untuk Lihat Proyek dan Logout; kedua aksi Tambah membuka form
-  masing-masing.
-- Drawer bersama berisi Home, Tambah Experience, dan Tambah Project, dengan
+- Lihat Proyek membuka daftar dari backend dan detail karya; Logout tetap
+  berupa SnackBar. Kedua aksi Tambah membuka form masing-masing.
+- Drawer bersama berisi Home, Lihat Proyek, Tambah Experience, dan Tambah Project, dengan
   navigasi tanpa menumpuk salinan halaman.
 - Form Experience dengan validasi, kategori sesuai model Django lokal, dan
   tanggal/waktu UTC. Dialog ringkasan memakai snapshot data valid dan tetap
@@ -38,7 +39,7 @@ Mulai dari [panduan menjalankan aplikasi](#menjalankan-aplikasi), lihat
   Kedua font dibundel secara lokal sehingga dapat digunakan tanpa koneksi
   internet.
 
-Daftar proyek dan logout sungguhan belum diimplementasikan. Save pada form
+Autentikasi/logout jaringan belum diimplementasikan. Save pada form
 Project maupun Experience hanya memvalidasi dan menampilkan ringkasan lokal.
 
 ## Prasyarat
@@ -139,8 +140,9 @@ Dokumentasi resmi Flutter dapat dibaca di
 
 Tahap ini menambahkan `http`, `provider`, dan `json_annotation`, serta dev
 dependency `build_runner` dan `json_serializable`. Versi hasil resolusi disimpan
-di `pubspec.lock`. Belum ada request jaringan, pemasangan provider pada widget,
-login, atau penyimpanan ke backend. Save tetap menampilkan preview lokal.
+di `pubspec.lock`. GET daftar/detail dijelaskan pada bagian berikutnya.
+Pemasangan provider pada widget, login, dan penyimpanan ke backend belum
+diterapkan. Save tetap menampilkan preview lokal.
 
 `lib/config/api_config.dart` membaca `API_BASE_URL` melalui deklarasi kompilasi
 `--dart-define`. Nilai default adalah `http://10.0.2.2:8000`, yaitu alamat host
@@ -217,6 +219,53 @@ bertanggung jawab menutupnya; `ApiClient.close()` menutup client bawaannya.
 flutter test --no-pub test/api_client_test.dart test/project_model_test.dart
 ```
 
+## Daftar dan Detail Project
+
+Daftar Project dibuka dari Home atau drawer. `ProjectListPage` menyimpan future
+di state dan hanya mengambil ulang data saat retry/refresh atau client diganti.
+`FutureBuilder` menampilkan loading, kosong, error ramah dengan Coba Lagi, dan
+daftar sebenarnya. Pull-to-refresh tetap tersedia saat kosong/error melalui
+`AlwaysScrollableScrollPhysics`; ikon Muat ulang proyek juga tersedia untuk
+desktop. Kembali dari detail mempertahankan daftar dan posisi scroll.
+
+Kartu memakai `PortfolioGlassPanel`, highlight atas, gradasi icy pink/lavender,
+aksen kuning, serta feedback hover/focus/pressed tanpa blur per kartu. Detail
+menampilkan deskripsi penuh, kategori, peran, keahlian, status pilihan,
+apresiasi, pemberi bintang, dan tautan bila valid. Thumbnail kosong/gagal memakai
+fallback. `url_launcher` membuka tautan HTTP/HTTPS; skema lain tidak dijalankan.
+Detail memakai snapshot hasil GET daftar; buka ulang/refresh daftar untuk data
+terbaru. Belum ada operasi POST, autentikasi, atau tombol star jaringan.
+
+Untuk mencoba backend lokal, jalankan Django pada terminal PowerShell terpisah:
+
+```powershell
+Set-Location C:\myportofolio
+$env:PRODUCTION = 'False'
+.\env\Scripts\python.exe manage.py runserver
+```
+
+Lalu jalankan Flutter dari repo mobile dengan origin CORS development yang cocok:
+
+```powershell
+Set-Location C:\myportofolio_mobile
+flutter run -d chrome --web-port 3000 --dart-define=API_BASE_URL=http://localhost:8000
+```
+
+Buka Lihat Proyek, pilih kartu, kembali, dan muat ulang. Jika backend kosong,
+halaman menampilkan keadaan kosong tanpa data contoh. Tes otomatis dapat
+dijalankan tanpa Django: `flutter test --no-pub`. Pada Windows, penggunaan
+plugin native seperti `url_launcher` juga memerlukan dukungan symlink untuk
+target desktop; pengujian runtime Chrome tidak membuktikan build Android atau
+Windows desktop sudah diverifikasi.
+
+Verifikasi tahap GET/layar: `flutter analyze --no-pub` bersih dan seluruh
+73 tes lulus (termasuk 8 tes HTTP dan 13 tes layar baru). Uji Chrome dengan
+Django lokal mengonfirmasi GET 200, Home → daftar → detail → Back, refresh,
+fallback thumbnail, dan layout jendela sempit/lebar. Keadaan kosong,
+error/retry, pull-to-refresh, teks 200%, serta kegagalan launcher diuji secara
+otomatis. Tautan eksternal belum dibuka dalam uji manual, dan build Android
+serta Windows desktop belum diuji.
+
 ## Struktur Penting
 
 | Lokasi | Fungsi |
@@ -225,6 +274,9 @@ flutter test --no-pub test/api_client_test.dart test/project_model_test.dart
 | `lib/screens/home_page.dart` | Halaman Home, identitas, hero, dan susunan empat kartu aksi. |
 | `lib/screens/experience_form_page.dart` | Halaman Tambah Experience, state isian, validasi, dan aksi Save. |
 | `lib/screens/project_form_page.dart` | Halaman Tambah Project dengan lima input wajib, validasi, dan preview lokal. |
+| `lib/screens/project_list_page.dart` dan `project_detail_page.dart` | GET publik, status daftar, refresh, dan detail Project. |
+| `lib/services/api_client.dart` | HTTP client yang dapat diinjeksi dan error publik terstruktur. |
+| `lib/widgets/project_card.dart` dan `project_thumbnail.dart` | Kartu kaca, kategori/status pilihan, thumbnail dan fallback. |
 | `lib/models/experience_data.dart` | `ExperienceDraft` dan `ExperienceCategory` untuk snapshot lokal serta kategori pengalaman. |
 | `lib/models/project_data.dart` | `ProjectDraft` dan `ProjectCategory` untuk snapshot lokal serta kategori proyek. |
 | `lib/models/project.dart` dan `project.g.dart` | Model JSON API Project; source anotasi dan hasil generator yang ikut Git. |
@@ -242,6 +294,7 @@ flutter test --no-pub test/api_client_test.dart test/project_model_test.dart
 | `test/experience_form_test.dart` | Tes validasi, snapshot ringkasan, retensi isian, scroll panjang, dan inset keyboard. |
 | `test/project_form_test.dart` | Tes akses Project dari Home/drawer, validasi, dialog, kembali ke Home, dan layout. |
 | `test/project_model_test.dart` | Tes kontrak respons/input API, kategori, default null, dan pengecualian field server dari POST. |
+| `test/api_client_test.dart` dan `project_pages_test.dart` | Tes HTTP dengan MockClient, status layar, navigasi, refresh, link, dan aksesibilitas layout. |
 | `pubspec.yaml` | Mendefinisikan metadata proyek, dependency, dan registrasi aset font beserta weight yang digunakan. |
 
 Di bawah `lib/`, `screens/` mengelompokkan halaman, `widgets/` menyimpan

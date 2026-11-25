@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:myportofolio_mobile/screens/experience_form_page.dart';
 import 'package:myportofolio_mobile/screens/home_page.dart';
 import 'package:myportofolio_mobile/screens/project_form_page.dart';
+import 'package:myportofolio_mobile/screens/project_list_page.dart';
+import 'package:myportofolio_mobile/services/api_client.dart';
 import 'package:myportofolio_mobile/theme/portfolio_colors.dart';
 import 'package:myportofolio_mobile/widgets/portfolio_drawer.dart';
 
@@ -10,7 +12,9 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({super.key, this.apiClient});
+
+  final ApiClient? apiClient;
 
   @override
   Widget build(BuildContext context) {
@@ -109,6 +113,8 @@ class MyApp extends StatelessWidget {
       ),
       home: const MyHomePage(title: 'MyPortfolio'),
       routes: {
+        PortfolioDestination.projects.routeName: (_) =>
+            ProjectListPage(apiClient: apiClient),
         PortfolioDestination.experience.routeName: (_) =>
             const ExperienceFormPage(),
         PortfolioDestination.project.routeName: (_) => const ProjectFormPage(),
