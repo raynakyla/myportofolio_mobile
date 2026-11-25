@@ -6,4 +6,7 @@ abstract final class ApiConfig {
   );
 
   static Uri get projectsUri => Uri.parse(baseUrl).resolve('/api/v1/projects/');
+  static Uri get tokenUri => Uri.parse(baseUrl).resolve('/api/v1/auth/token/');
+  static Uri get logoutUri =>
+      Uri.parse(baseUrl).resolve('/api/v1/auth/logout/');
 }

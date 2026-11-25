@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:myportofolio_mobile/auth/auth_state.dart';
 import 'package:myportofolio_mobile/screens/experience_form_page.dart';
 import 'package:myportofolio_mobile/screens/home_page.dart';
 import 'package:myportofolio_mobile/screens/project_form_page.dart';
@@ -12,9 +14,34 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key, this.apiClient});
+  const MyApp({super.key, this.apiClient, this.authState});
 
   final ApiClient? apiClient;
+  final AuthState? authState;
+
+  @override
+  Widget build(BuildContext context) => MultiProvider(
+    providers: [
+      if (apiClient != null)
+        Provider<ApiClient>.value(value: apiClient!)
+      else
+        Provider<ApiClient>(
+          create: (_) => ApiClient(),
+          dispose: (_, api) => api.close(),
+        ),
+      if (authState != null)
+        ChangeNotifierProvider<AuthState>.value(value: authState!)
+      else
+        ChangeNotifierProvider<AuthState>(
+          create: (context) => AuthState(context.read<ApiClient>()),
+        ),
+    ],
+    child: const _PortfolioApp(),
+  );
+}
+
+class _PortfolioApp extends StatelessWidget {
+  const _PortfolioApp();
 
   @override
   Widget build(BuildContext context) {
@@ -114,7 +141,7 @@ class MyApp extends StatelessWidget {
       home: const MyHomePage(title: 'MyPortfolio'),
       routes: {
         PortfolioDestination.projects.routeName: (_) =>
-            ProjectListPage(apiClient: apiClient),
+            ProjectListPage(apiClient: context.read<ApiClient>()),
         PortfolioDestination.experience.routeName: (_) =>
             const ExperienceFormPage(),
         PortfolioDestination.project.routeName: (_) => const ProjectFormPage(),

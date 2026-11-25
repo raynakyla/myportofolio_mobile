@@ -6,22 +6,44 @@ import 'package:json_annotation/json_annotation.dart';
 import 'package:myportofolio_mobile/config/api_config.dart';
 import 'package:myportofolio_mobile/models/project.dart';
 
-enum ApiFailureKind { http, invalidResponse, connection }
+enum ApiFailureKind {
+  http,
+  invalidResponse,
+  connection,
+  invalidCredentials,
+  invalidToken,
+}
+
+enum ApiOperation { projects, login, logout }
 
 /// Public error metadata, without response bodies or internal server details.
 class ApiException implements Exception {
-  const ApiException(this.kind, {this.statusCode});
+  const ApiException(
+    this.kind, {
+    this.statusCode,
+    this.operation = ApiOperation.projects,
+  });
 
   final ApiFailureKind kind;
   final int? statusCode;
+  final ApiOperation operation;
 
   String get message => switch (kind) {
-    ApiFailureKind.http =>
-      'Proyek belum dapat dimuat. Coba lagi beberapa saat.',
+    ApiFailureKind.http => switch (operation) {
+      ApiOperation.projects =>
+        'Proyek belum dapat dimuat. Coba lagi beberapa saat.',
+      ApiOperation.login => 'Login belum dapat diproses. Silakan coba lagi.',
+      ApiOperation.logout => 'Pencabutan sesi server belum berhasil. Anda tetap keluar dari aplikasi.',
+    },
     ApiFailureKind.invalidResponse =>
-      'Data proyek belum dapat dibaca. Silakan coba lagi.',
+      operation == ApiOperation.projects
+          ? 'Data proyek belum dapat dibaca. Silakan coba lagi.'
+          : 'Respons autentikasi belum dapat dibaca. Silakan coba lagi.',
     ApiFailureKind.connection =>
       'Tidak dapat terhubung. Periksa koneksi Anda lalu coba lagi.',
+    ApiFailureKind.invalidCredentials => 'Username atau password tidak cocok.',
+    ApiFailureKind.invalidToken =>
+      'Sesi tidak valid atau sudah berakhir. Silakan login kembali.',
   };
 
   @override
@@ -36,6 +58,106 @@ class ApiClient {
   final http.Client _client;
   final bool _ownsClient;
   final Duration timeout;
+
+  static bool _validToken(String token) =>
+      token.length == 40 && RegExp(r'^[a-fA-F0-9]{40}$').hasMatch(token);
+
+  Future<http.Response> _authRequest(
+    Future<http.Response> Function() send,
+    ApiOperation operation,
+  ) async {
+    try {
+      return await send().timeout(timeout);
+    } on http.ClientException {
+      throw ApiException(ApiFailureKind.connection, operation: operation);
+    } on TimeoutException {
+      throw ApiException(ApiFailureKind.connection, operation: operation);
+    }
+  }
+
+  Future<String> obtainToken(String username, String password) async {
+    final response = await _authRequest(
+      () => _client.post(
+        ApiConfig.tokenUri,
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'username': username, 'password': password}),
+      ),
+      ApiOperation.login,
+    );
+    if ([400, 401, 403].contains(response.statusCode)) {
+      throw ApiException(
+        ApiFailureKind.invalidCredentials,
+        statusCode: response.statusCode,
+        operation: ApiOperation.login,
+      );
+    }
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw ApiException(
+        ApiFailureKind.http,
+        statusCode: response.statusCode,
+        operation: ApiOperation.login,
+      );
+    }
+    try {
+      final json = jsonDecode(utf8.decode(response.bodyBytes));
+      if (json is! Map<String, dynamic> ||
+          json['token'] is! String ||
+          !_validToken(json['token'] as String)) {
+        throw const ApiException(
+          ApiFailureKind.invalidResponse,
+          operation: ApiOperation.login,
+        );
+      }
+      return json['token'] as String;
+    } on FormatException {
+      throw const ApiException(
+        ApiFailureKind.invalidResponse,
+        operation: ApiOperation.login,
+      );
+    }
+  }
+
+  Future<void> logout(String token) async {
+    if (!_validToken(token)) {
+      throw const ApiException(
+        ApiFailureKind.invalidToken,
+        operation: ApiOperation.logout,
+      );
+    }
+    final response = await _authRequest(
+      () => _client.post(
+        ApiConfig.logoutUri,
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Token $token',
+        },
+      ),
+      ApiOperation.logout,
+    );
+    if ([401, 403].contains(response.statusCode)) {
+      throw ApiException(
+        ApiFailureKind.invalidToken,
+        statusCode: response.statusCode,
+        operation: ApiOperation.logout,
+      );
+    }
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw ApiException(
+        ApiFailureKind.http,
+        statusCode: response.statusCode,
+        operation: ApiOperation.logout,
+      );
+    }
+    if (response.statusCode != 204) {
+      throw const ApiException(
+        ApiFailureKind.invalidResponse,
+        operation: ApiOperation.logout,
+      );
+    }
+  }
 
   Future<List<Project>> getProjects() async {
     final http.Response response;

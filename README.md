@@ -268,6 +268,15 @@ serta Windows desktop belum diuji.
 
 ## Struktur Penting
 
+Fondasi sesi Tutorial 10 menyediakan `ApiClient.obtainToken(username, password)`
+dan `logout(token)`, dengan JSON login, header Token untuk logout, serta validasi
+respons/token DRF. Error yang ditampilkan tidak memuat password, token, body HTML,
+atau detail server. `AuthState` adalah ChangeNotifier yang disediakan bersama
+ApiClient melalui provider; injeksi `MyApp(apiClient: ...)` tetap didukung.
+Token hanya disimpan dalam memori dan hilang saat aplikasi dimulai ulang.
+Logout segera membersihkan state lokal walaupun pencabutan server gagal.
+Pembatalan login mengabaikan respons yang datang belakangan.
+
 | Lokasi | Fungsi |
 | --- | --- |
 | `lib/main.dart` | Entry point `runApp`, `MaterialApp`, tema/font utama, dan pendaftaran named routes kedua form. |
