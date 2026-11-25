@@ -200,6 +200,23 @@ flutter analyze --no-pub
 flutter test --no-pub
 ```
 
+## Tutorial 10: GET Project
+
+`lib/services/api_client.dart` menyediakan GET publik melalui
+`ApiConfig.projectsUri`. `ApiClient(client: ...)` menerima `http.Client`,
+termasuk `MockClient` untuk tes tanpa server. Respons harus berupa array JSON
+datar yang seluruh elemennya cocok dengan model `Project`; daftar kosong tidak
+diganti dengan data contoh. Timeout default adalah 15 detik.
+
+`ApiException` membedakan kegagalan HTTP (dengan `statusCode`), respons/JSON
+tidak sesuai, dan koneksi/timeout. Pesan publik tidak memuat body server,
+HTML, atau detail exception internal. Pemilik client HTTP yang diinjeksi
+bertanggung jawab menutupnya; `ApiClient.close()` menutup client bawaannya.
+
+```powershell
+flutter test --no-pub test/api_client_test.dart test/project_model_test.dart
+```
+
 ## Struktur Penting
 
 | Lokasi | Fungsi |
